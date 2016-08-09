@@ -5,7 +5,7 @@ unit IWBSRestServer;
 interface
 
 uses
-  Classes, SysUtils, StrUtils,
+   Classes, SysUtils, StrUtils, System.SyncObjs,
   IWApplication, IW.Content.Base, IW.HTTP.Request, IW.HTTP.Reply;
 
 type
@@ -43,6 +43,7 @@ const IWBS_RESTURLBASE = '/$iwbs/';
 
 var
   FIsServerRegistered: boolean = False;
+  FCriticalRegisterRestServer:TCriticalSection;
 
 {$region 'TIWBSRestCallback'}
 { TIWCallback }
@@ -180,12 +181,26 @@ end;
 
 procedure IWBSRegisterRestServerHandler;
 begin
-  if not FIsServerRegistered then
-    THandlers.Add(IWBS_RESTURLBASE, '', TIWBSRestServer.Create);
+  FCriticalRegisterRestServer.Acquire; //to avoid AcessViolation on Install package with  TIWBSTable
+  try
+    try
+      if not FIsServerRegistered then
+        THandlers.Add(IWBS_RESTURLBASE, '', TIWBSRestServer.Create);
+      RegisterContentType('multipart/form-data');
 
-  RegisterContentType('multipart/form-data');
+      FIsServerRegistered := True;
+    except
 
-  FIsServerRegistered := True;
+    end;
+  finally
+    FCriticalRegisterRestServer.Leave;
+  end;
 end;
 
+initialization
+  FCriticalRegisterRestServer:= TCriticalSection.Create;
+
+
+finalization
+  FCriticalRegisterRestServer.Free;
 end.

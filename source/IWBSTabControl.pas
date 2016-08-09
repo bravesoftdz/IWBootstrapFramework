@@ -9,12 +9,17 @@ uses
   IWRenderContext, IWHTMLTag, IWBSCommon, IWBSRegionCommon, IWXMLTag, IW.Common.RenderStream, IWBSCustomEvents;
 
 type
+  TIWBSCloseTabAction = (bstabFree, bstabHide, bstabNone);
+  TIWBSTabCloseEvent = procedure(Sender:TObject; aTab:TIWTabPage; var aCloseAction:TIWBSCloseTabAction) of object;
+
   TIWBSTabOptions = class(TPersistent)
   private
     FFade: boolean;
     FPills: boolean;
     FJustified: boolean;
     FStacked: boolean;
+    FCloseButtons: Boolean;
+    procedure SetCloseButtons(const Value: Boolean);
   public
     constructor Create(AOwner: TComponent);
     procedure Assign(Source: TPersistent); override;
@@ -23,6 +28,7 @@ type
     property Pills: boolean read FPills write FPills default false;
     property Justified: boolean read FJustified write FJustified default false;
     property Stacked: boolean read FStacked write FStacked default false;
+    property CloseButtons:Boolean read FCloseButtons write SetCloseButtons default False;
   end;
 
   TIWBSTabControl = class(TIWTabControl, IIWInputControl, IIWBSComponent, IIWBSContainer)
@@ -48,6 +54,7 @@ type
 
     FOnAfterRender: TNotifyEvent;
     FOnAfterAsyncChange: TNotifyEvent;
+    FOnTabClose: TIWBSTabCloseEvent;
 
     function TabOrderToTabIndex(ATabOrder: integer): integer;
     procedure CheckActiveVisible;
@@ -73,6 +80,8 @@ type
     procedure SetScriptInsideTag(const Value: boolean);
     function GetAfterRender: TNotifyEvent;
     procedure SetAfterRender(const Value: TNotifyEvent);
+    procedure DoOnTabClose(aParams:TStringList);
+    procedure SetOnTabClose(const Value: TIWBSTabCloseEvent);
   protected
     procedure SetValue(const AValue: string);
     function InitContainerContext(AWebApplication: TIWApplication): TIWContainerContext; override;
@@ -121,6 +130,9 @@ type
     property OnAfterAsyncChange: TNotifyEvent read FOnAfterAsyncChange write FOnAfterAsyncChange;
 
     property OnHTMLTag;
+
+    property OnTabClose:TIWBSTabCloseEvent read FOnTabClose write SetOnTabClose;
+
   end;
 
 implementation
@@ -134,6 +146,19 @@ begin
   FPills := False;
   FJustified := False;
   FStacked := False;
+  FCloseButtons:=False;
+end;
+
+procedure TIWBSTabOptions.SetCloseButtons(const Value: Boolean);
+begin
+  if FCloseButtons <> Value then
+    begin
+      FCloseButtons := Value;
+     { if FCloseButtons then
+        TIWBSGlobal.IWBSAddGlobalLinkFile(gIWBSLibPath + '/dyntabs/jquery-ui-1.9.2.custom.min.js')
+      else
+        TIWBSGlobal.IWBSRemoveGlobalLinkFile(gIWBSLibPath + '/dyntabs/jquery-ui-1.9.2.custom.min.js'); }
+    end;
 end;
 
 procedure TIWBSTabOptions.Assign(Source: TPersistent);
@@ -181,6 +206,28 @@ begin
   inherited;
 end;
 
+procedure TIWBSTabControl.DoOnTabClose(aParams: TStringList);
+var
+  LTabIndex:Integer;
+  LCloseAction:TIWBSCloseTabAction;
+  LPage:TIWTabPage;
+begin
+  LCloseAction:= bstabHide;
+  LTabIndex:= StrToIntDef(aParams.Values[HTMLName+ '_input'], -1);
+  if (LTabIndex > -1) and (LTabIndex < FPages.Count) then
+    begin
+      LPage:= TIWTabPage(FPages[LTabIndex]);
+      if Assigned(FOnTabClose) then
+        FOnTabClose(Self, LPage, LCloseAction);
+      case LCloseAction of
+        bstabFree: LPage.Free;
+        bstabHide: LPage.Hide;
+        //bstabNone: ;
+      end;
+      Self.AsyncRefreshControl;
+    end;
+end;
+
 function TIWBSTabControl.JQSelector: string;
 begin
   Result := '$("#'+HTMLName+'")';
@@ -212,6 +259,11 @@ procedure TIWBSTabControl.SetGridOptions(const Value: TIWBSGridOptions);
 begin
   FGridOptions.Assign(Value);
   invalidate;
+end;
+
+procedure TIWBSTabControl.SetOnTabClose(const Value: TIWBSTabCloseEvent);
+begin
+  FOnTabClose := Value;
 end;
 
 procedure TIWBSTabControl.SetValue(const AValue: string);
@@ -314,6 +366,7 @@ begin
   FScriptParams.Assign(AValue);
 end;
 
+
 function TIWBSTabControl.GetScript: TStringList;
 begin
   Result := FScript;
@@ -363,6 +416,11 @@ begin
 
   // save seleted tab on change, manually trigger change event because val don't do it
   AScript.Add('$("#'+AHTMLName+'_tabs").off("show.bs.tab").on("show.bs.tab", function(e){ $("#'+AHTMLName+'_input").val($(e.target).attr("tabindex")).change(); });');
+
+  //Add Close Button event
+  AScript.Add('$("#'+AHTMLName+'_tabs span.tab-close-btn").off("click").on("click", function(e){ executeAjaxEvent("&page="+$(e.target).attr("tabindex"), null, "'+AHTMLName+'.DoOnTabClose", true, null, true); });');
+  AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnTabClose', DoOnTabClose);
+
 
   // event async change
   if Assigned(OnAsyncChange) then begin
@@ -452,7 +510,7 @@ var
   xHTMLName: string;
   xHTMLInput: string;
   i, tabIndex: integer;
-  tagTabs, tag: TIWHTMLTag;
+  tagTabs, tagLi, tagA, TagSpan: TIWHTMLTag;
   TabPage: TIWTabPage;
 begin
   FOldCss := RenderCSSClass(AContext);
@@ -492,24 +550,37 @@ begin
 
   // build the tabs
   tabIndex := -1;
-  for i := 0 to Pages.Count-1 do begin
-    TabPage := TIWTabPage(FPages.Items[i]);
-    TabPage.TabOrder := i;
-    if not TabPage.Visible and not RenderInvisibleControls then
-      Continue;
-    tag := tagTabs.Contents.AddTag('li');
-    if (tabIndex = -1) and (FActivePage = TabPage.TabOrder) and TabPage.Visible then begin
-      tag.AddClassParam('active');
-      tabIndex := i;
+  for i := 0 to Pages.Count-1 do
+    begin
+      TabPage := TIWTabPage(FPages.Items[i]);
+      TabPage.TabOrder := i;
+      if not TabPage.Visible and not RenderInvisibleControls then
+        Continue;
+      tagLi := tagTabs.Contents.AddTag('li');
+      if (tabIndex = -1) and (FActivePage = TabPage.TabOrder) and TabPage.Visible then
+        begin
+          tagLi.AddClassParam('active');
+          tabIndex := i;
+        end;
+      //Add icon Close
+      if FTabOptions.CloseButtons then
+        begin
+          TagSpan:= tagLi.Contents.AddTag('span');
+          TagSpan.AddClassParam('tab-close-btn');
+          TagSpan.AddStringParam('role', 'presentation');
+          TagSpan.Contents.AddText('X');
+          if not TabPage.Visible then
+            TagSpan.AddStringParam('style', 'display:none');
+        end;
+
+      tagA := tagLi.Contents.AddTag('a');
+      tagA.AddStringParam('data-toggle', IfThen(FTabOptions.Pills,'pill','tab'));
+      tagA.AddStringParam('href', '#'+TabPage.HTMLName);
+      tagA.AddIntegerParam('tabindex', i);
+      if not TabPage.Visible then
+        tagA.AddStringParam('style','display: none');
+      tagA.Contents.AddText(TabPage.Title);
     end;
-    tag := tag.Contents.AddTag('a');
-    tag.AddStringParam('data-toggle', IfThen(FTabOptions.Pills,'pill','tab'));
-    tag.AddStringParam('href', '#'+TabPage.HTMLName);
-    tag.AddIntegerParam('tabindex', i);
-    if not TabPage.Visible then
-      tag.AddStringParam('style','display: none');
-    tag.Contents.AddText(TabPage.Title);
-  end;
 
   // this hidden input is for input seleted tab page
   Result.Contents.AddHiddenField(xHTMLInput, xHTMLInput, IntToStr(tabIndex));

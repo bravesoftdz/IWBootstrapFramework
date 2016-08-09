@@ -82,3 +82,20 @@
     opacity: 1;
 }
 
+/**** Tab Close Button ***/
+.tab-close-btn {
+    float: right;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: 1px;
+    margin-right: 2px;
+    position: relative;
+    text-indent: 3px;
+    color: #feffff;
+    background-color: #a1a1cc;
+    z-index: 2000;
+    border-radius: 0 6px 0 0;
+}
+

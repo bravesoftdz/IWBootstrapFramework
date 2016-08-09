@@ -40,6 +40,7 @@ requires
 
 contains
   IWBSRegister in 'IWBSRegister.pas',
-  glyphicons in 'glyphicons.pas';
+  glyphicons in 'glyphicons.pas',
+  IWBSAccordionEditor in 'IWBSAccordionEditor.pas';
 
 end.

@@ -69,7 +69,9 @@ implementation
 uses DesignIntf, Windows, Forms, Dialogs, Graphics,
      glyphicons, IWBaseControl,
      IWBSLayoutMgr, IWBSControls, IWBSCustomInput,
-     IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl, IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML;
+     IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl,
+     IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML, IWBSTable,
+     IWBSSelect2, IWBSAccordion, IWBSAccordionEditor;
 
 const
   CNST_DEFAULTFONTNAME = 'Tahoma';
@@ -637,6 +639,15 @@ begin
 
   RegisterComponents('IW BootsTrap', [TIWBSTabControl]);
 
+  RegisterComponents('IW BootsTrap', [TIWBSTable]);
+
+  RegisterComponents('IW BootsTrap', [TIWBSSelect2]);
+
+  RegisterComponents('IW BootsTrap', [TIWBSAccordion]);
+ // RegisterClass('TIWBSAccordionItem');
+  RegisterComponentEditor(TIWBSAccordion, TIWBSAccordionEditor);
+
+
   UnlistPublishedProperty(TIWBSCustomControl, 'SkinId');
   UnlistPublishedProperty(TIWBSCustomControl, 'StyleRenderOptions');
 
@@ -648,6 +659,15 @@ begin
   UnlistPublishedProperty(TIWBSTabControl, 'InactiveTabFont');
   UnlistPublishedProperty(TIWBSTabControl, 'ActiveTabColor');
   UnlistPublishedProperty(TIWBSTabControl, 'InactiveTabColor');
+
+  UnlistPublishedProperty(TIWBSTable, 'TagType');
+
+  UnlistPublishedProperty(TIWBSTable, 'ScriptParams');
+
+  UnlistPublishedProperty(TIWBSSelect2, 'ScriptParams');
+
+  UnlistPublishedProperty(TIWBSAccordion, 'TagType');
+
 end;
 
 initialization
@@ -685,6 +705,13 @@ initialization
 
   IWRegisterPaintHandler('TIWBSTabControl',TIWPaintHandlerTabControl);
 
+  IWRegisterPaintHandler('TIWBSTable',TIWBSPaintHandlerText);
+
+  IWRegisterPaintHandler('TIWBSSelect2',TIWBSPaintHandlerCustomInput);
+
+  IWRegisterPaintHandler('TIWBSAccordion',TIWBSPaintHandlerRegion);
+
+
 finalization
   slGlyphicons.Free;
 
@@ -716,5 +743,11 @@ finalization
   IWUnRegisterPaintHandler('TIWBSImage');
 
   IWUnRegisterPaintHandler('TIWBSTabControl');
+
+  IWUnRegisterPaintHandler('TIWBSTable');
+
+  IWUnRegisterPaintHandler('TIWBSSelect2');
+
+  IWUnRegisterPaintHandler('TIWBSAccordion');
 
 end.

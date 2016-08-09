@@ -4,7 +4,8 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, Forms, Controls,
-  IWContainerLayout, IWRenderContext, IWBaseHTMLInterfaces, IWBaseRenderContext, IW.Common.RenderStream, IWHTMLTag;
+  IWContainerLayout, IWRenderContext, IWBaseHTMLInterfaces, IWBaseRenderContext,
+  IW.Common.RenderStream, IWHTMLTag, IWUserSessionBase;
 
 type
 
@@ -13,6 +14,8 @@ type
   TIWBSLayoutMgr = class(TIWContainerLayout)
   private
     FLinkFiles: TStringList;
+    FLocalThemeCss: string;
+    procedure SetLocalThemeThemeCss(const Value: string);
   public
     constructor Create(AOnwer: TComponent); override;
     destructor Destroy; override;
@@ -22,6 +25,8 @@ type
     procedure ProcessControl(AContainerContext: TIWContainerContext; APageContext: TIWBaseHTMLPageContext; AControl: IIWBaseHTMLComponent); override;
     procedure ProcessForm(ABuffer, ATmpBuf: TIWRenderStream; APage: TIWBasePageContext);
     procedure Process(ABuffer: TIWRenderStream; AContainerContext: TIWContainerContext; aPage: TIWBasePageContext); override;
+    //Need to be addeded after all css files
+    property LocalThemeCss:string read FLocalThemeCss write SetLocalThemeThemeCss;
   end;
 
 implementation
@@ -81,6 +86,8 @@ var
   LPageContext: TIWPageContext40;
   LTerminated: Boolean;
   i: integer;
+  LApp:TIWApplication;
+  LUserSession:TIWUserSessionBase;
 begin
 
   LUrlBase := gGetWebApplicationThreadVar.AppUrlBase;
@@ -128,14 +135,20 @@ begin
   end;
 
   // add global linkfiles
-  if gIWBSLinkFiles <> nil then
-    for i := 0 to gIWBSLinkFiles.Count-1 do
-      ABuffer.WriteLine(ParseLinkFile(LUrlBase, gIWBSLinkFiles[i]));
+  if TIWBSGlobal.IWBSLinkFiles <> nil then
+    for i := 0 to TIWBSGlobal.IWBSLinkFiles.Count-1 do
+      ABuffer.WriteLine(ParseLinkFile(LUrlBase, TIWBSGlobal.IWBSLinkFiles[i]));
 
   // add LayoutMgr linkfiles
   if FLinkFiles <> nil then
     for i := 0 to FLinkFiles.Count-1 do
       ABuffer.WriteLine(ParseLinkFile(LUrlBase, FLinkFiles[i]));
+
+  //Theme css is last added
+  if FLocalThemeCss <> '' then  //add local layoutmgr theme
+    ABuffer.WriteLine(ParseLinkFile(LUrlBase, FLocalThemeCss))
+  else if gIWBSGlobalThemeCss <> '' then //add Theme Css from Global Theme
+    ABuffer.WriteLine(ParseLinkFile(LUrlBase, gIWBSGlobalThemeCss));
 
   ABuffer.WriteLine('<script>var IWBSAppBaseUrl = "'+LUrlBase+'";</script>');
   ABuffer.WriteLine(ScriptSection(LPageContext));
@@ -148,6 +161,11 @@ begin
   LPageContext.BodyTag.Contents.AddBuffer(ATmpBuf);
   LPageContext.BodyTag.Render(ABuffer);
   ABuffer.WriteLine('</html>');
+end;
+
+procedure TIWBSLayoutMgr.SetLocalThemeThemeCss(const Value: string);
+begin
+  FLocalThemeCss := Value;
 end;
 
 function ControlRenderingSort(AItem1: Pointer; AItem2: Pointer): Integer;

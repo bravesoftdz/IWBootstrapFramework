@@ -10,6 +10,7 @@ uses
 type
   // TIWBSCustomButton.BSButtonStyle
   TIWBSButtonStyle = (bsbsDefault, bsbsPrimary, bsbsSuccess, bsbsInfo, bsbsWarning, bsbsDanger, bsbsLink, bsbsClose);
+  TIWBSBtnImagePosition = (bsbtimgLeft,bsbtimgRight,bsbtimgCenter);
 
   // Base class for TIWBSButton and TIWBSDropDown
   TIWBSCustomButton = class(TIWBSCustomControl)
@@ -64,6 +65,8 @@ type
     FHotKey: string;
     FHref: string;
     FTarget: string;
+    FImageSrc: string;
+    FImagePosition: TIWBSBtnImagePosition;
 
     procedure DoAsyncClickProc(Sender: TObject; EventParams: TStringList);
     procedure SetAsyncClickProc(Value: TIWBSAsyncEventProc);
@@ -74,6 +77,8 @@ type
     procedure SetHref(const Value: string);
     procedure SetTarget(const Value: string);
     procedure SetDataDismiss(const Value: TIWBSButtonDataDismiss);
+    procedure SetImageSrc(const Value: string);
+    procedure SetImagePosition(const Value: TIWBSBtnImagePosition);
   protected
     procedure InternalRenderCss(var ACss: string); override;
     procedure InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag); override;
@@ -108,6 +113,9 @@ type
     // The target attribute specifies where to open the linked document. Apply when Href is used. @br
     // http://www.w3schools.com/html/html_links.asp
     property Target: string read FTarget write SetTarget stored IsTargetStored;
+
+    property ImageSrc:string read FImageSrc write SetImageSrc;
+    property ImagePosition:TIWBSBtnImagePosition read FImagePosition write SetImagePosition;
   end;
 
 const
@@ -246,7 +254,23 @@ begin
     if (FButtonStyle = bsbsClose) and (s = '') and (FGlyphicon = '') then
       AHTMLTag.Contents.AddText('&times;')
     else
-      AHTMLTag.Contents.AddText(s);
+      if FImagePosition = bsbtimgLeft then
+        begin
+          //image before Caption
+          if FImageSrc <> '' then
+            AHTMLTag.Contents.AddText('<img src="' + FImageSrc + '"></img>'
+            );
+           AHTMLTag.Contents.AddText(s);
+        end
+      else if FImagePosition = bsbtimgRight then
+        begin
+          //image After Caption
+          AHTMLTag.Contents.AddText(s);
+          if FImageSrc <> '' then
+            AHTMLTag.Contents.AddText('<img src="' + FImageSrc + '"></img>'
+            );
+        end;
+
   except
     FreeAndNil(AHTMLTag);
     raise;
@@ -288,6 +312,16 @@ procedure TIWBSButton.SetHref(const Value: string);
 begin
   FHref := Value;
   AsyncRefreshControl;
+end;
+
+procedure TIWBSButton.SetImagePosition(const Value: TIWBSBtnImagePosition);
+begin
+  FImagePosition := Value;
+end;
+
+procedure TIWBSButton.SetImageSrc(const Value: string);
+begin
+  FImageSrc := Value;
 end;
 
 procedure TIWBSButton.SetTarget(const Value: string);

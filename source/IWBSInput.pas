@@ -6,15 +6,25 @@ uses
   SysUtils, Classes, db, StrUtils, Controls,
   IWRenderContext, IWHTMLTag, IWXMLTag, IWBaseHTMLControl, IWBaseInterfaces, IWApplication,
   IWCompCheckBox, IWCompRadioButton, IWCompButton, IWDBStdCtrls, IWDBExtCtrls,
-  IWBSRegion, IWBSCommon, IWBSCustomInput;
+  IWBSRegion, IWBSCommon, IWBSCustomInput, IWBSGlobal;
 
 type
 
   TIWBSInput = class(TIWBSCustomTextInput)
+  private
+    FMask: string;
+    FAutoComplete: Boolean;
+    procedure SetMask(const Value: string);
+    procedure SetAutoComplete(const Value: Boolean);
   protected
     procedure InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag); override;
+  public
+    constructor Create(AOwner: TComponent); override;
   published
     property InputType default bsitText;
+    property Mask:string read FMask write SetMask;
+    //FAutocomplete for websites it is good, but for applications it not intended
+    property AutoComplete:Boolean read FAutoComplete write SetAutoComplete default False;
   end;
 
   TIWBSMemo = class(TIWBSCustomTextInput)
@@ -119,7 +129,17 @@ implementation
 uses IW.Common.System, IWResourceStrings, IWBSInputCommon, IWBSUtils;
 
 {$region 'TIWBSInput'}
+constructor TIWBSInput.Create(AOwner: TComponent);
+begin
+  inherited;
+  FAutoComplete:=False;
+  FMask:= '';
+end;
+
 procedure TIWBSInput.InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag);
+var
+  MaskTag:TIWHTMLTag;
+  FakeAutocomp:TIWHTMLTag;
 begin
   inherited;
   if FIsStatic then
@@ -160,16 +180,56 @@ begin
           AHTMLTag.AddStringParam('placeholder', TextToHTML(PlaceHolder));
         if TabIndex <> 0 then
           AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
+        AHTMLTag.AddStringParam('autocomplete', IfThen(FAutoComplete, 'on', 'off'));
         AHTMLTag.AddStringParam('style', ActiveStyle);
       except
         FreeAndNil(AHTMLTag);
         raise;
       end;
     end;
+  if FMask <> '' then
+    begin
+      MaskTag:= TIWHTMLTag.CreateTag('script');
+      MaskTag.Contents.AddText( '$("#' + HTMLName + '").mask("999.999.999-99",{placeholder:" "});');
+      AHTMLTag.Contents.AddTagAsObject(MaskTag);
+    end;
 
   if not (Parent is TIWBSInputGroup) and (InputType <> bsitHidden) then
-    AHTMLTag := IWBSCreateInputFormGroup(Self, Parent, AHTMLTag, Caption, AHTMLName);
+    begin
+      AHTMLTag := IWBSCreateInputFormGroup(Self, Parent, AHTMLTag, Caption, AHTMLName);
+      //browsers not respect autocomplete "off" in password inputs,
+      //to solve this, put another input password hidden,
+      //it elude browser with password change form
+      if (InputType = bsitPassword) and (not FAutoComplete) then
+        begin
+          FakeAutocomp:= TIWHTMLTag.CreateTag('input');
+          FakeAutocomp.AddStringParam('style', 'visibility: hidden;');
+          FakeAutocomp.AddStringParam('type', 'password');
+          if Caption <> '' then
+            AHTMLTag.Contents.Insert(1, FakeAutocomp)
+          else
+            AHTMLTag.Contents.Insert(0, FakeAutocomp);
+        end;
+    end;
 end;
+
+procedure TIWBSInput.SetAutoComplete(const Value: Boolean);
+begin
+  FAutoComplete := Value;
+end;
+
+procedure TIWBSInput.SetMask(const Value: string);
+begin
+  if FMask <> Value then
+    begin
+      FMask := Value;
+      if FMask <> '' then
+        TIWBSGlobal.IWBSAddGlobalLinkFile(gIWBSLibPath + '/maskedinput/jquery.maskedinput.min.js' )
+      else
+        TIWBSGlobal.IWBSRemoveGlobalLinkFile(gIWBSLibPath + '/maskedinput/jquery.maskedinput.min.js');
+    end;
+end;
+
 {$endregion}
 
 {$region 'TIWBSMemo'}
