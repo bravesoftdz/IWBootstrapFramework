@@ -33,7 +33,6 @@ type
   TIWBSSelect2 = class(TIWBSSelect)
   private
     FOnAsyncSearch: TAsyncSearchEvent;
-    function IsScriptStored: Boolean;
         // to update script options when Component options are changed
     procedure UpdateOptions;
         // this event we return a json with the options that the Select2 request
@@ -41,13 +40,15 @@ type
     procedure SetOnAsyncSearch(const Value: TAsyncSearchEvent);
   protected
     procedure OnItemsChange(ASender : TObject); override;
+    procedure InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag); override;
+    procedure InternalRenderStyle(AStyle: TStringList); override;
+    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function RenderAsync(AContext: TIWCompContext): TIWXMLTag; override;
     function RenderHTML(AContext: TIWCompContext): TIWHTMLTag; override;
   published
-    property Script stored IsScriptStored;
     property ScriptInsideTag default False;
     property OnAsyncSearch: TAsyncSearchEvent read FOnAsyncSearch write SetOnAsyncSearch;
   end;
@@ -60,8 +61,6 @@ constructor TIWBSSelect2.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   inherited ScriptInsideTag := False;
-  { TODO 1 -oDELCIO -cIMPROVEMENT : MOVE TO InternalRenderScripts }
-  inherited Script.Text     := '$(''#{%htmlname%}'').select2({%options%});';
   UpdateOptions;
 end;
 
@@ -92,11 +91,31 @@ begin
   aReply.WriteString('{"items": ' + data + '}');
 end;
 
-function TIWBSSelect2.IsScriptStored: Boolean;
+procedure TIWBSSelect2.InternalRenderHTML(const AHTMLName: string;
+  AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag);
+begin
+  inherited;
+  AHTMLTag.AddStringParam('style', ActiveStyle);
+end;
+
+procedure TIWBSSelect2.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
+begin
+  inherited;
+  AScript.Add('$(''#{%htmlname%}'').select2({%options%});');
+end;
+
+procedure TIWBSSelect2.InternalRenderStyle(AStyle: TStringList);
+begin
+  inherited;
+
+end;
+
+(*function TIWBSSelect2.IsScriptStored: Boolean;
 begin
   { TODO 1 -oDELCIO -cIMPROVEMENT : MOVE TO InternalRenderScripts }
   Result := Script.Text <> '$(''#{%htmlname%}'').select2({%options%});';
-end;
+end; *)
 
 procedure TIWBSSelect2.OnItemsChange(ASender: TObject);
 begin
@@ -145,6 +164,7 @@ begin
     OptTxt.Values['tags']              := 'true';
     OptTxt.Values['placeholder']       := '"Selecione Uma Opção"';
     OptTxt.Values['allowclear']        := 'true';
+    OptTxt.Values['width']             := '"style"'; //To Work with IWBSFluidForm
     ScriptParams.Values['options']     := '{' + OptTxt.DelimitedText + '}';
 
     if CustomRestEvents.Count = 0 then
@@ -188,8 +208,16 @@ end;
 
 initialization
   //Enable CSS and JS for Select2 Plugin
-  TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.min.css');
-  TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.min.js');
+  if DebugHook <> 0 then
+    begin
+      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.css');
+      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.js');
+    end
+  else
+    begin
+      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.min.css');
+      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.min.js');
+    end;
   // this enable the rest event server
   IWBSRegisterRestServerHandler;
 end.

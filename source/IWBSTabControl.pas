@@ -82,6 +82,9 @@ type
     procedure SetAfterRender(const Value: TNotifyEvent);
     procedure DoOnTabClose(aParams:TStringList);
     procedure SetOnTabClose(const Value: TIWBSTabCloseEvent);
+    procedure DoOnAsyncChange(AParams:TStringList);
+    function GetActiveTabPage: TIWTabPage;
+    procedure SetActiveTabPage(const Value: TIWTabPage);
   protected
     procedure SetValue(const AValue: string);
     function InitContainerContext(AWebApplication: TIWApplication): TIWContainerContext; override;
@@ -106,8 +109,10 @@ type
     procedure SetFocus; override;
     procedure SetTabPageVisibility(ATabIndex: integer; Visible: boolean); overload;
     procedure SetTabPageVisibility(ATabPage: TIWTabPage; Visible: boolean); overload;
+    function AddNewTab:TIWTabPage;
   published
     property ActivePage: Integer read FActivePage write SetActivePage;
+    property ActiveTabPage:TIWTabPage read GetActiveTabPage write SetActiveTabPage;
     property Align;
     property BSGridOptions: TIWBSGridOptions read FGridOptions write SetGridOptions;
     property BSTabOptions: TIWBSTabOptions read FTabOptions write SetTabOptions;
@@ -154,10 +159,7 @@ begin
   if FCloseButtons <> Value then
     begin
       FCloseButtons := Value;
-     { if FCloseButtons then
-        TIWBSGlobal.IWBSAddGlobalLinkFile(gIWBSLibPath + '/dyntabs/jquery-ui-1.9.2.custom.min.js')
-      else
-        TIWBSGlobal.IWBSRemoveGlobalLinkFile(gIWBSLibPath + '/dyntabs/jquery-ui-1.9.2.custom.min.js'); }
+      { TODO 1 -oDELCIO -cIMPROVEMENT : Implemet UPDATEOPTIONS }
     end;
 end;
 
@@ -206,6 +208,11 @@ begin
   inherited;
 end;
 
+procedure TIWBSTabControl.DoOnAsyncChange(AParams: TStringList);
+begin
+  inherited DoOnAsyncChange(AParams);
+end;
+
 procedure TIWBSTabControl.DoOnTabClose(aParams: TStringList);
 var
   LTabIndex:Integer;
@@ -236,6 +243,21 @@ end;
 procedure TIWBSTabControl.SetFocus;
 begin
   IWBSExecuteAsyncJScript(JQSelector+'.focus()');
+end;
+
+function TIWBSTabControl.AddNewTab: TIWTabPage;
+begin
+  Result:= TIWTabPage.Create(Self);
+  try
+    Result.Title:= 'Page' + IntToStr(FPages.Count);
+    Result.Name:= Self.Name + 'Page' + IntToStr(FPages.Count);
+    Result.Parent:= Self;
+    Result.TabOrder:=  FPages.Count;
+    //FPages.Add(Result);
+    AsyncRefreshControl;
+  except
+    FreeAndNil(Result);
+  end;
 end;
 
 procedure TIWBSTabControl.AsyncRefreshControl;
@@ -301,6 +323,11 @@ begin
   Invalidate;
 end;
 
+function TIWBSTabControl.GetActiveTabPage: TIWTabPage;
+begin
+  Result:= TIWTabPage(FPages[FActivePage]);
+end;
+
 function TIWBSTabControl.GetAfterRender: TNotifyEvent;
 begin
   Result := FOnAfterRender;
@@ -324,6 +351,20 @@ procedure TIWBSTabControl.SetActivePage(const Value: Integer);
 begin
   FActivePage := Value;
   Invalidate;
+end;
+
+procedure TIWBSTabControl.SetActiveTabPage(const Value: TIWTabPage);
+var
+  I: Integer;
+begin
+  for I := 0 to FPages.Count -1 do
+    begin
+      if TIWTabPage(FPages[I]) = Value then
+        begin
+          SetActivePage(I);
+          Break;
+        end;
+    end;
 end;
 
 procedure TIWBSTabControl.SetAfterRender(const Value: TNotifyEvent);
@@ -421,12 +462,15 @@ begin
   AScript.Add('$("#'+AHTMLName+'_tabs span.tab-close-btn").off("click").on("click", function(e){ executeAjaxEvent("&page="+$(e.target).attr("tabindex"), null, "'+AHTMLName+'.DoOnTabClose", true, null, true); });');
   AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnTabClose', DoOnTabClose);
 
+  //To update server Tab Index to avoid change browser active tab if refresh page
+  AScript.Add('$("#'+AHTMLName+'_tabs").off("shown.bs.tab").on("shown.bs.tab", function(e){ executeAjaxEvent("&page="+$(e.target).attr("tabindex"), null, "'+AHTMLName+'.DoOnAsyncChange", true, null, true); });');
+  AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnAsyncChange', DoOnAsyncChange);
 
-  // event async change
+ (* // event async change
   if Assigned(OnAsyncChange) then begin
     AScript.Add('$("#'+AHTMLName+'_tabs").off("shown.bs.tab").on("shown.bs.tab", function(e){ executeAjaxEvent("&page="+$(e.target).attr("tabindex"), null, "'+AHTMLName+'.DoOnAsyncChange", true, null, true); });');
     AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnAsyncChange', DoOnAsyncChange);
-  end;
+  end; *)
 end;
 
 procedure TIWBSTabControl.InternalRenderStyle(AStyle: TStringList);

@@ -21,7 +21,7 @@ type
     FRendered: boolean;
     FCustomAsyncEvents: TIWBSCustomAsyncEvents;
     FCustomRestEvents: TIWBSCustomRestEvents;
-    FTagType: string;
+
     FCss: string;
     FGridOptions: TIWBSGridOptions;
     FRegionDiv: TIWHTMLTag;
@@ -59,6 +59,7 @@ type
     procedure set_ScriptEvents(const Value: TIWScriptEvents);
     procedure SetAfterRender(const Value: TNotifyEvent);
   protected
+    FTagType: string;
     {$hints off}
     function get_Visible: Boolean; override;
     procedure set_Visible(Value: Boolean); override;

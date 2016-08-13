@@ -71,7 +71,7 @@ uses DesignIntf, Windows, Forms, Dialogs, Graphics,
      IWBSLayoutMgr, IWBSControls, IWBSCustomInput,
      IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl,
      IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML, IWBSTable,
-     IWBSSelect2, IWBSAccordion, IWBSAccordionEditor;
+     IWBSSelect2, IWBSAccordion, IWBSAccordionEditor, IWBSFluidForm;
 
 const
   CNST_DEFAULTFONTNAME = 'Tahoma';
@@ -647,6 +647,7 @@ begin
  // RegisterClass('TIWBSAccordionItem');
   RegisterComponentEditor(TIWBSAccordion, TIWBSAccordionEditor);
 
+  RegisterComponents('IW BootsTrap', [TIWBSFluidForm]);
 
   UnlistPublishedProperty(TIWBSCustomControl, 'SkinId');
   UnlistPublishedProperty(TIWBSCustomControl, 'StyleRenderOptions');
@@ -711,6 +712,8 @@ initialization
 
   IWRegisterPaintHandler('TIWBSAccordion',TIWBSPaintHandlerRegion);
 
+  IWRegisterPaintHandler('TIWBSFluidForm',TIWBSPaintHandlerRegion);
+
 
 finalization
   slGlyphicons.Free;
@@ -749,5 +752,7 @@ finalization
   IWUnRegisterPaintHandler('TIWBSSelect2');
 
   IWUnRegisterPaintHandler('TIWBSAccordion');
+
+  IWUnRegisterPaintHandler('TIWBSFluidForm');
 
 end.

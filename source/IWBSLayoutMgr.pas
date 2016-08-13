@@ -34,7 +34,7 @@ implementation
 uses
   IWBaseForm, IWGlobal, IWHTML40Interfaces, IWTypes, IWHTMLContainer, IWBaseInterfaces, IWBaseControl, IWLists, IWURL,
   IWRegion, IW.Common.Strings, IWMimeTypes, IWApplication,
-  IWBSGlobal, IWBSRegionCommon, IWBSCommon, IWBSTabControl;
+  IWBSGlobal, IWBSRegionCommon, IWBSCommon, IWBSTabControl, IWBSFluidForm;
 
 constructor TIWBSLayoutMgr.Create(AOnwer: TComponent);
 begin
@@ -249,7 +249,11 @@ begin
           LHTML := xCompContext.HTMLTag;
 
           if LHTML <> nil then
-            LComponent.MakeHTMLTag(LHTML, LTmp);
+            begin   //v--- To Render fluid form controls
+              if Container.InterfaceInstance.ClassNameIs('TIWBSFluidForm') then
+                LHTML.Params.Values['style']:= LHTML.Params.Values['style'] + 'width:' + IntToStr(TControl(LComponent).Width) + 'px;';
+              LComponent.MakeHTMLTag(LHTML, LTmp);
+            end;
         end;
       end;
     finally

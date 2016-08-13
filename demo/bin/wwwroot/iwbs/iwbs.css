@@ -99,3 +99,23 @@
     border-radius: 0 6px 0 0;
 }
 
+/* Select2 */
+.select2 {
+	width:100% !important;
+}
+
+/* IWBSFluidForm  */
+.iwbs-form-fluid label{
+	display:flex;
+	top:0;
+}
+.iwbs-form-fluid div{
+  /*display:inherit;*/
+	margin-left: 4px;
+	display: inline-block;
+	margin-bottom: 0;
+	vertical-align: middle;
+} 
+.iwbs-form-fluid label,input,select{
+	width: 100% !important;
+}

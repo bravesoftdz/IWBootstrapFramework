@@ -9,9 +9,9 @@ uses System.Classes, System.SysUtils, System.Math,
 
 type
 
-  TBsTblSortOrder = (bsgSortAsc, bsgSortDesc);
-  TBsTblPagPosition = (bsgPagTop, bsgPagBottom, bsgPagBoth);
-  TBsColDataAlign = (bscAlLeft, bscAlRight, bscAlCenter);
+  TBsTblSortOrder     = (bsgSortAsc, bsgSortDesc);
+  TBsTblPagPosition   = (bsgPagTop, bsgPagBottom, bsgPagBoth);
+  TBsColDataAlign     = (bscAlLeft, bscAlRight, bscAlCenter);
   TBsColDataVertAlign = (bscAlVerTop, bscAlVerBottom, bscAlVerMiddle);
 
   TIWBSTableColumn = class(TCollectionItem)
@@ -34,8 +34,8 @@ type
     procedure SetDataVertAlign(const Value: TBsColDataVertAlign);
     procedure SetWidth(const Value: string);
     procedure SetSortable(const Value: Boolean);
-    function IsCssClassStored:Boolean;
-    function IsWidthStored:Boolean;
+    function IsCssClassStored: Boolean;
+    function IsWidthStored: Boolean;
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
@@ -47,8 +47,8 @@ type
     property DataVertAlign:TBsColDataVertAlign read FDataVertAlign write SetDataVertAlign default bscAlVerMiddle;
     property HeaderAlign: TBsColDataAlign read FHeaderAlign write SetHeaderAlign default bscAlLeft;
     property FooterAlign: TBsColDataAlign read FFooterAlign write SetFooterAlign default bscAlLeft;
-    property Width:string read FWidth write SetWidth stored IsWidthStored;
-    property Sortable:Boolean read FSortable write SetSortable default True;
+    property Width: string read FWidth write SetWidth stored IsWidthStored;
+    property Sortable: Boolean read FSortable write SetSortable default True;
   end;
 
   TIWBSTable = class(TIWBSText)
@@ -68,7 +68,7 @@ type
     procedure SetTagType(const Value: string);
     function IsTagTypeStored: Boolean;
     function IsScriptStored: Boolean;
-    function IsSortFieldNameStored:Boolean;
+    function IsSortFieldNameStored: Boolean;
     procedure SetColumns(const Value: TOwnedCollection);
     // to update script table options when Component options are changed
     procedure UpdateOptions;
@@ -111,10 +111,7 @@ type
     property SingleSelect:Boolean read FSingleSelect write SetSingleSelect default True;
   end;
 
-
-
 implementation
-
 
 { TIWBSTable }
 
@@ -124,31 +121,30 @@ begin
   inherited TagType         := 'table';
   inherited ScriptInsideTag := False;
   { TODO 1 -oDELCIO -cIMPROVEMENT : MOVE TO InternalRenderScripts }
-  inherited Script.Text     := '$(''#{%htmlname%}'').bootstrapTable({%options%});';
-  FColumns                  := TOwnedCollection.Create(Self, TIWBSTableColumn);
-  FPagination               := True;
-  FMobileResponsive         := True;
-  FFormatData               := TFormatSettings.Create('en-US');
-  FSortColumn               := '';
-  FSortOrder                := bsgSortAsc;
-  FShowHeader               := True;
-  FShowFooter               := False;
-  FShowRefresh              := True;
-  FPaginationPosition       := bsgPagBottom;
-  FclickToSelect            := True;
-  FSingleSelect             := True;
+  inherited Script.Text := '$(''#{%htmlname%}'').bootstrapTable({%options%});';
+  FColumns              := TOwnedCollection.Create(Self, TIWBSTableColumn);
+  FPagination           := True;
+  FMobileResponsive     := True;
+  FFormatData           := TFormatSettings.Create('en-US');
+  FSortColumn           := '';
+  FSortOrder            := bsgSortAsc;
+  FShowHeader           := True;
+  FShowFooter           := False;
+  FShowRefresh          := True;
+  FPaginationPosition   := bsgPagBottom;
+  FclickToSelect        := True;
+  FSingleSelect         := True;
   UpdateOptions;
 end;
 
-procedure TIWBSTable.DbTableCustomRestEvents0RestEvent(
-  aApplication: TIWApplication; aRequest: THttpRequest; aReply: THttpReply;
-  aParams: TStrings);
-      function GetFieldForColumn(aColumnIndex:integer):TField;
-      begin
-        Result:= DataSource.DataSet.FieldByName(
-                                  TIWBSTableColumn(FColumns.Items[aColumnIndex]).FieldName
-                                              );
-      end;
+procedure TIWBSTable.DbTableCustomRestEvents0RestEvent(aApplication: TIWApplication;
+  aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
+  function GetFieldForColumn(aColumnIndex: integer): TField;
+  begin
+    Result := DataSource.DataSet.FieldByName(TIWBSTableColumn(FColumns.Items[aColumnIndex])
+      .FieldName);
+  end;
+
 var
   data: string;
   line: string;
@@ -157,35 +153,40 @@ var
 begin
   // here we return the data in json format
   // see format on: http://bootstrap-table.wenzhixin.net.cn/getting-started/#usage-via-javascript
-  f := StrToIntDef(aRequest.QueryFields.Values['offset'],0);
-  t := Min(f+StrToIntDef(aRequest.QueryFields.Values['limit'],10), DataSource.DataSet.RecordCount);
+  f := StrToIntDef(aRequest.QueryFields.Values['offset'], 0);
+  t := Min(f + StrToIntDef(aRequest.QueryFields.Values['limit'], 10),
+    DataSource.DataSet.RecordCount);
 
   DataSource.DataSet.DisableControls;
   bmrk := DataSource.DataSet.Bookmark;
   try
-    data := '';
-    for r := f+1 to t do
+    data  := '';
+    for r := f + 1 to t do
       begin
         DataSource.DataSet.RecNo := r;
 
-        line := '';
-        for i := 0 to FColumns.Count -1 do
+        line  := '';
+        for i := 0 to FColumns.Count - 1 do
           begin
             if i > 0 then
-              line := line+',';
+              line := line + ',';
             if (GetFieldForColumn(i) is TNumericField) then
-              line := line+'"field'+IntToStr(i)+'":'+FloatToStr(GetFieldForColumn(i).AsFloat,FFormatData)
-            else if (DataSource.DataSet.Fields[i] is TStringField) or (GetFieldForColumn(i) is TMemoField) then
-              line := line+'"field'+IntToStr(i)+'":"'+EscapeJsonString(GetFieldForColumn(i).AsString)+'"'
+              line := line + '"field' + IntToStr(i) + '":' +
+                FloatToStr(GetFieldForColumn(i).AsFloat, FFormatData)
+            else if (DataSource.DataSet.Fields[i] is TStringField) or
+              (GetFieldForColumn(i) is TMemoField) then
+              line := line + '"field' + IntToStr(i) + '":"' +
+                EscapeJsonString(GetFieldForColumn(i).AsString) + '"'
             else
-              line := line+'"field'+IntToStr(i)+'":""';
+              line := line + '"field' + IntToStr(i) + '":""';
 
           end;
         if data <> '' then
-          data := data+',';
-        data := data+'{'+line+'}';
+          data := data + ',';
+        data   := data + '{' + line + '}';
       end;
-    aReply.WriteString('{"total": '+IntToStr(DataSource.DataSet.RecordCount)+', "rows": ['+data+']}');
+    aReply.WriteString('{"total": ' + IntToStr(DataSource.DataSet.RecordCount) + ', "rows": [' +
+      data + ']}');
   finally
     DataSource.DataSet.GotoBookmark(bmrk);
     DataSource.DataSet.EnableControls;
@@ -200,14 +201,14 @@ end;
 
 function TIWBSTable.GetColumns: TOwnedCollection;
 begin
- { if not Assigned(FColumns) then
+  { if not Assigned(FColumns) then
     FColumns:= TOwnedCollection.Create(Self, TIwSrpTableColum); }
-  Result:= FColumns;
+  Result := FColumns;
 end;
 
 function TIWBSTable.GetTagType: string;
 begin
-  Result:= inherited TagType;
+  Result := inherited TagType;
 end;
 
 function TIWBSTable.IsScriptStored: Boolean;
@@ -218,21 +219,19 @@ end;
 
 function TIWBSTable.IsSortFieldNameStored: Boolean;
 begin
-  Result:= FSortColumn <> '';
+  Result := FSortColumn <> '';
 end;
-
 
 function TIWBSTable.IsTagTypeStored: Boolean;
 begin
   Result := TagType <> 'table';
 end;
 
-
 function TIWBSTable.RenderAsync(AContext: TIWCompContext): TIWXMLTag;
 begin
   if FColumns.Count = 0 then
     UpdateOptions;
-  Result:= inherited;
+  Result := inherited;
 end;
 
 function TIWBSTable.RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
@@ -244,19 +243,19 @@ end;
 
 procedure TIWBSTable.VerifyColumns;
 var
-  J: Integer;
+  J: integer;
 begin
   if (FColumns.Count = 0) and (Assigned(DataSource)) then
-  begin
-    for j := 0 to DataSource.Dataset.FieldCount - 1 do
     begin
-      with TIWBSTableColumn(FColumns.Add) do
-      begin
-        FFieldName := DataSource.Dataset.Fields[J].FieldName;
-        Title := DataSource.Dataset.Fields[J].DisplayName;
-      end;
+      for J := 0 to DataSource.DataSet.FieldCount - 1 do
+        begin
+          with TIWBSTableColumn(FColumns.Add) do
+            begin
+              FFieldName := DataSource.DataSet.Fields[J].FieldName;
+              Title      := DataSource.DataSet.Fields[J].DisplayName;
+            end;
+        end;
     end;
-  end;
 end;
 
 procedure TIWBSTable.SetclickToSelect(const Value: Boolean);
@@ -270,8 +269,8 @@ end;
 
 procedure TIWBSTable.SetColumns(const Value: TOwnedCollection);
 begin
-  {if not Assigned(FColumns) then
-    FColumns:= TOwnedCollection.Create(Self, TIwSrpTableColum);}
+  { if not Assigned(FColumns) then
+    FColumns:= TOwnedCollection.Create(Self, TIwSrpTableColum); }
   if Value <> FColumns then
     begin
       FColumns.Assign(Value);
@@ -369,83 +368,99 @@ end;
 
 procedure TIWBSTable.UpdateOptions;
 var
-  OptColumns:string;
-  OptTxt:TStrings;
-  j:Integer;
+  OptColumns: string;
+  OptTxt: TStrings;
+  J: integer;
 begin
   VerifyColumns;
 
   OptColumns := '[';
-  for j := 0 to FColumns.Count -1 do
+  for J      := 0 to FColumns.Count - 1 do
     begin
       with TIWBSTableColumn(FColumns.Items[J]) do
         begin
-          if j > 0 then
+          if J > 0 then
             OptColumns := OptColumns + ',';
-          OptColumns := OptColumns + '{"field":' + '"field' + IntToStr(j) +
-                                    '","title":"' + FTitle;
+          OptColumns := OptColumns + '{"field":' + '"field' + IntToStr(J) + '","title":"' + FTitle;
           if FCSSclass <> '' then
             OptColumns := OptColumns + '","class":"' + FCSSclass;
           case FDataAlign of
-            bscAlLeft: OptColumns := OptColumns + '","align":"left';
-            bscAlRight: OptColumns := OptColumns + '","align":"right';
-            bscAlCenter: OptColumns := OptColumns + '","align":"center';
+            bscAlLeft:
+              OptColumns := OptColumns + '","align":"left';
+            bscAlRight:
+              OptColumns := OptColumns + '","align":"right';
+            bscAlCenter:
+              OptColumns := OptColumns + '","align":"center';
           end;
           case FDataVertAlign of
-            bscAlVerTop: OptColumns := OptColumns + '","valign":"top';
-            bscAlVerBottom: OptColumns := OptColumns + '","valign":"bottom';
-            bscAlVerMiddle: OptColumns := OptColumns + '","valign":"middle';
+            bscAlVerTop:
+              OptColumns := OptColumns + '","valign":"top';
+            bscAlVerBottom:
+              OptColumns := OptColumns + '","valign":"bottom';
+            bscAlVerMiddle:
+              OptColumns := OptColumns + '","valign":"middle';
           end;
           case FHeaderAlign of
-            bscAlLeft: OptColumns := OptColumns + '","halign":"left';
-            bscAlRight: OptColumns := OptColumns + '","halign":"right';
-            bscAlCenter: OptColumns := OptColumns + '","halign":"center';
+            bscAlLeft:
+              OptColumns := OptColumns + '","halign":"left';
+            bscAlRight:
+              OptColumns := OptColumns + '","halign":"right';
+            bscAlCenter:
+              OptColumns := OptColumns + '","halign":"center';
           end;
           case FFooterAlign of
-            bscAlLeft: OptColumns := OptColumns + '","falign":"left';
-            bscAlRight: OptColumns := OptColumns + '","falign":"right';
-            bscAlCenter: OptColumns := OptColumns + '","falign":"center';
+            bscAlLeft:
+              OptColumns := OptColumns + '","falign":"left';
+            bscAlRight:
+              OptColumns := OptColumns + '","falign":"right';
+            bscAlCenter:
+              OptColumns := OptColumns + '","falign":"center';
           end;
-          if (FWidth <> '') then OptColumns := OptColumns + '","width":"' + FWidth;
-          OptColumns := OptColumns + IfThen(FSortable,  '","sortable":"true', '","sortable":"false');
-          OptColumns := OptColumns +  '"}';
+          if (FWidth <> '') then
+            OptColumns := OptColumns + '","width":"' + FWidth;
+          OptColumns := OptColumns + IfThen(FSortable, '","sortable":"true', '","sortable":"false');
+          OptColumns := OptColumns + '"}';
         end;
 
     end;
-  OptColumns := OptColumns+']';
+  OptColumns := OptColumns + ']';
 
   OptTxt := TStringList.Create;
   try
-    OptTxt.NameValueSeparator  := ':';
-    OptTxt.Delimiter       := ',';
-    OptTxt.QuoteChar       := ' ';
-    OptTxt.StrictDelimiter := True;
+    OptTxt.NameValueSeparator := ':';
+    OptTxt.Delimiter          := ',';
+    OptTxt.QuoteChar          := ' ';
+    OptTxt.StrictDelimiter    := True;
 
     OptTxt.Values['url']              := '"{%dataurl%}"';
     OptTxt.Values['columns']          := OptColumns;
-    OptTxt.Values['pagination']       := ifThen(FPagination, 'true', 'false');
+    OptTxt.Values['pagination']       := IfThen(FPagination, 'true', 'false');
     OptTxt.Values['sidePagination']   := '"server"';
-    OptTxt.Values['mobileResponsive'] := ifThen(FMobileResponsive, 'true', 'false');
-    //OptTxt.Values['paginationVAlign'] := '"top"';
-    if FSortColumn <> '' then OptTxt.Values['sortName'] := '"'+ FSortColumn + '"';
-    OptTxt.Values['sortOrder'] := ifThen(FSortOrder = bsgSortAsc, '"asc"', '"desc"');
-    OptTxt.Values['showHeader'] := ifThen(FShowHeader, 'true', 'false');
-    OptTxt.Values['showFooter'] := ifThen(FShowFooter, 'true', 'false');
-    OptTxt.Values['showRefresh'] := ifThen(FShowRefresh, 'true', 'false');
+    OptTxt.Values['mobileResponsive'] := IfThen(FMobileResponsive, 'true', 'false');
+    // OptTxt.Values['paginationVAlign'] := '"top"';
+    if FSortColumn <> '' then
+      OptTxt.Values['sortName']  := '"' + FSortColumn + '"';
+    OptTxt.Values['sortOrder']   := IfThen(FSortOrder = bsgSortAsc, '"asc"', '"desc"');
+    OptTxt.Values['showHeader']  := IfThen(FShowHeader, 'true', 'false');
+    OptTxt.Values['showFooter']  := IfThen(FShowFooter, 'true', 'false');
+    OptTxt.Values['showRefresh'] := IfThen(FShowRefresh, 'true', 'false');
     case FPaginationPosition of
-      bsgPagTop: OptTxt.Values['paginationVAlign'] := '"top"';
-      bsgPagBottom:OptTxt.Values['paginationVAlign'] := '"bottom"';
-      bsgPagBoth: OptTxt.Values['paginationVAlign'] := '"both"';
+      bsgPagTop:
+        OptTxt.Values['paginationVAlign'] := '"top"';
+      bsgPagBottom:
+        OptTxt.Values['paginationVAlign'] := '"bottom"';
+      bsgPagBoth:
+        OptTxt.Values['paginationVAlign'] := '"both"';
     end;
-    OptTxt.Values['clickToSelect'] := ifThen(FclickToSelect, 'true', 'false');
-    OptTxt.Values['singleSelect'] := ifThen(FSingleSelect, 'true', 'false');
+    OptTxt.Values['clickToSelect'] := IfThen(FclickToSelect, 'true', 'false');
+    OptTxt.Values['singleSelect']  := IfThen(FSingleSelect, 'true', 'false');
 
-    ScriptParams.Values['options'] := '{'+OptTxt.DelimitedText+'}';
+    ScriptParams.Values['options'] := '{' + OptTxt.DelimitedText + '}';
 
     if CustomRestEvents.Count = 0 then
       CustomRestEvents.Add;
-    CustomRestEvents[0].EventName := 'dataurl';
-    CustomRestEvents[0].OnRestEvent:= DbTableCustomRestEvents0RestEvent;
+    CustomRestEvents[0].EventName   := 'dataurl';
+    CustomRestEvents[0].OnRestEvent := DbTableCustomRestEvents0RestEvent;
 
   finally
     OptTxt.Free;
@@ -479,7 +494,7 @@ end;
 
 function TIWBSTableColumn.IsWidthStored: Boolean;
 begin
-  Result:= FWidth <> '';
+  Result := FWidth <> '';
 end;
 
 procedure TIWBSTableColumn.SetCSSclass(const Value: string);
@@ -487,7 +502,7 @@ begin
   if FCSSclass <> Value then
     begin
       FCSSclass := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -496,7 +511,7 @@ begin
   if FDataAlign <> Value then
     begin
       FDataAlign := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -505,7 +520,7 @@ begin
   if FDataVertAlign <> Value then
     begin
       FDataVertAlign := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -519,7 +534,7 @@ begin
   if FFooterAlign <> Value then
     begin
       FFooterAlign := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -528,7 +543,7 @@ begin
   if FHeaderAlign <> Value then
     begin
       FHeaderAlign := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -537,7 +552,7 @@ begin
   if FSortable <> Value then
     begin
       FSortable := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
@@ -551,16 +566,25 @@ begin
   if FWidth <> Value then
     begin
       FWidth := Value;
-      //(GetOwner as TIWBSTable).UpdateOptions;
+      // (GetOwner as TIWBSTable).UpdateOptions;
     end;
 end;
 
 initialization
-   //Enable CSS and JS for Table Plugin
-  TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
-  TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
 
-  // this enable the rest event server
-  IWBSRegisterRestServerHandler;
+// Enable CSS and JS for Table Plugin
+if DebugHook <> 0 then
+  begin
+    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.css');
+    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.js');
+  end
+else
+  begin
+    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
+    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
+  end;
+
+// this enable the rest event server
+IWBSRegisterRestServerHandler;
 
 end.

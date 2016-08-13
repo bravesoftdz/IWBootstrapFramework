@@ -61,7 +61,8 @@ contains
   IWBSMemoHtml in 'IWBSMemoHtml.pas',
   IWBSTable in 'IWBSTable.pas',
   IWBSSelect2 in 'IWBSSelect2.pas',
-  IWBSAccordion in 'IWBSAccordion.pas';
+  IWBSAccordion in 'IWBSAccordion.pas',
+  IWBSFluidForm in 'IWBSFluidForm.pas';
 
 end.
 
