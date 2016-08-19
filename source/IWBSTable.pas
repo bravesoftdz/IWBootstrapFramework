@@ -67,7 +67,6 @@ type
     FSingleSelect: Boolean;
     procedure SetTagType(const Value: string);
     function IsTagTypeStored: Boolean;
-    function IsScriptStored: Boolean;
     function IsSortFieldNameStored: Boolean;
     procedure SetColumns(const Value: TOwnedCollection);
     // to update script table options when Component options are changed
@@ -89,6 +88,8 @@ type
     procedure SetPaginationPosition(const Value: TBsTblPagPosition);
     procedure SetclickToSelect(const Value: Boolean);
     procedure SetSingleSelect(const Value: Boolean);
+  protected
+     procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -96,7 +97,6 @@ type
     function RenderHTML(AContext: TIWCompContext): TIWHTMLTag; override;
   published
     property TagType: string read GetTagType write SetTagType stored IsTagTypeStored;
-    property Script stored IsScriptStored;
     property ScriptInsideTag default False;
     property Columns: TOwnedCollection read GetColumns write SetColumns;
     property Pagination: Boolean read FPagination write SetPagination default True;
@@ -120,8 +120,6 @@ begin
   inherited;
   inherited TagType         := 'table';
   inherited ScriptInsideTag := False;
-  { TODO 1 -oDELCIO -cIMPROVEMENT : MOVE TO InternalRenderScripts }
-  inherited Script.Text := '$(''#{%htmlname%}'').bootstrapTable({%options%});';
   FColumns              := TOwnedCollection.Create(Self, TIWBSTableColumn);
   FPagination           := True;
   FMobileResponsive     := True;
@@ -141,8 +139,12 @@ procedure TIWBSTable.DbTableCustomRestEvents0RestEvent(aApplication: TIWApplicat
   aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
   function GetFieldForColumn(aColumnIndex: integer): TField;
   begin
+    try
     Result := DataSource.DataSet.FieldByName(TIWBSTableColumn(FColumns.Items[aColumnIndex])
       .FieldName);
+    except
+      Result:=nil;
+    end;
   end;
 
 var
@@ -177,9 +179,11 @@ begin
               (GetFieldForColumn(i) is TMemoField) then
               line := line + '"field' + IntToStr(i) + '":"' +
                 EscapeJsonString(GetFieldForColumn(i).AsString) + '"'
+            else if GetFieldForColumn(i) <> nil then
+               line := line + '"field' + IntToStr(i) + '":"' +
+                GetFieldForColumn(i).AsString + '"'
             else
               line := line + '"field' + IntToStr(i) + '":""';
-
           end;
         if data <> '' then
           data := data + ',';
@@ -211,11 +215,18 @@ begin
   Result := inherited TagType;
 end;
 
-function TIWBSTable.IsScriptStored: Boolean;
+procedure TIWBSTable.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
 begin
-  { TODO 1 -oDELCIO -cIMPROVEMENT : MOVE TO InternalRenderScripts }
-  Result := Script.Text <> '$(''#{%htmlname%}'').bootstrapTable({%options%});';
+  inherited;
+  UpdateOptions;
+  AScript.Add('$(''#{%htmlname%}'').bootstrapTable({%options%});');
+
+
+
 end;
+
+
 
 function TIWBSTable.IsSortFieldNameStored: Boolean;
 begin
@@ -431,8 +442,12 @@ begin
     OptTxt.Delimiter          := ',';
     OptTxt.QuoteChar          := ' ';
     OptTxt.StrictDelimiter    := True;
+    try
 
-    OptTxt.Values['url']              := '"{%dataurl%}"';
+    OptTxt.Values['url']              := '"'+ IWBSRegisterRestCallBack(gGetWebApplicationThreadVar, HTMLName +'.dataurl', DbTableCustomRestEvents0RestEvent) + '"';
+    except
+
+    end;
     OptTxt.Values['columns']          := OptColumns;
     OptTxt.Values['pagination']       := IfThen(FPagination, 'true', 'false');
     OptTxt.Values['sidePagination']   := '"server"';
@@ -456,11 +471,6 @@ begin
     OptTxt.Values['singleSelect']  := IfThen(FSingleSelect, 'true', 'false');
 
     ScriptParams.Values['options'] := '{' + OptTxt.DelimitedText + '}';
-
-    if CustomRestEvents.Count = 0 then
-      CustomRestEvents.Add;
-    CustomRestEvents[0].EventName   := 'dataurl';
-    CustomRestEvents[0].OnRestEvent := DbTableCustomRestEvents0RestEvent;
 
   finally
     OptTxt.Free;

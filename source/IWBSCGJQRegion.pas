@@ -34,7 +34,7 @@ type
     property BSButtonGroupOptions: TIWBSButonGroupOptions read FButtonGroupOptions write SetButtonGroupOptions;
     property BSGridOptions: TIWBSGridOptions read FGridOptions write SetGridOptions;
     property BSPanelStyle: TIWBSPanelStyle read FPanelStyle write SetPanelStyle default bspsDefault;
-    property BSRegionType: TIWBSRegionType read FRegionType write SetRegionType default bsrtIWBSRegion;
+    property BSRegionType: TIWBSRegionType read FRegionType write SetRegionType default bsrtNone;
     property BSRelativeSize: TIWBSRelativeSize read FRelativeSize write SetRelativeSize default bsrzDefault;
   end;
 
@@ -70,7 +70,7 @@ begin
   FGridOptions := TIWBSGridOptions.Create;
   FButtonGroupOptions := TIWBSButonGroupOptions.Create(Self);
   FPanelStyle := bspsDefault;
-  FRegionType := bsrtIWBSRegion;
+  FRegionType := bsrtNone;
   FRelativeSize := bsrzDefault;
 end;
 

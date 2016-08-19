@@ -254,7 +254,8 @@ begin
             Text := FloatToStr(LField.AsExtended, LFormatSettings)
 
           // aca agregar todos los tipos fecha que hay
-
+          else if (FInputType = bsitDate) and (LField.DataType in [ftDate, ftTime, ftDateTime, ftTimeStamp, ftOraTimeStamp]) then
+            Text := FormatDateTime('yyyy-mm-dd',LField.AsDateTime)
           else if (FInputType = bsitDateTimeLocal) and (LField.DataType in [ftDate, ftTime, ftDateTime, ftTimeStamp, ftOraTimeStamp]) then
             Text := FormatDateTime('yyyy-mm-dd"T"hh:nn',LField.AsDateTime)
           else

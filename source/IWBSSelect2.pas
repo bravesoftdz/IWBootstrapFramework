@@ -43,6 +43,7 @@ type
     procedure InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag); override;
     procedure InternalRenderStyle(AStyle: TStringList); override;
     procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
+    procedure InternalRenderAsync(const AHTMLName: string; AApplication: TIWApplication); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -54,6 +55,8 @@ type
   end;
 
 implementation
+   uses IWBSFluidForm;
+
 
 { TIWBSSelect2 }
 
@@ -91,6 +94,32 @@ begin
   aReply.WriteString('{"items": ' + data + '}');
 end;
 
+procedure TIWBSSelect2.InternalRenderAsync(const AHTMLName: string;
+  AApplication: TIWApplication);
+var
+  LSelectedIdx: string;
+  i: integer;
+begin
+  inherited;
+ {   if (FText <> FOldText) then begin
+    LSelectedIdx := '';
+    if MultiSelect then
+      begin
+        for i := 0 to Length(FItemsSelected)-1 do
+          if FItemsSelected[i] then begin
+            if LSelectedIdx <> '' then
+              LSelectedIdx := LSelectedIdx + ',';
+            LSelectedIdx := LSelectedIdx + IntToStr(i);
+          end;
+      end
+    else if FItemIndex >= 0 then
+      LSelectedIdx := IntToStr(FItemIndex);
+    IWBSExecuteAsyncJScript(AApplication, '$("#'+AHTMLName+'").val(['+LSelectedIdx+']);', False, True);
+    FOldText := FText;
+  end; }
+
+end;
+
 procedure TIWBSSelect2.InternalRenderHTML(const AHTMLName: string;
   AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag);
 begin
@@ -108,7 +137,8 @@ end;
 procedure TIWBSSelect2.InternalRenderStyle(AStyle: TStringList);
 begin
   inherited;
-
+  if ParentContainer is TIWBSFluidForm then
+    AStyle.Values['width']:=  InttoStr(Width) + 'px';
 end;
 
 (*function TIWBSSelect2.IsScriptStored: Boolean;

@@ -1,11 +1,11 @@
-package IWCGJQBootstrapXE5;
+package IWBSFiredac;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -25,26 +25,18 @@ package IWCGJQBootstrapXE5;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'IntraWeb Bootstrap Framework CGDevTools support'}
-{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
-  xmlrtl,
   vcl,
-  vclimg,
-  dbrtl,
-  inet,
-  IndyProtocols,
-  IndyCore,
-  IndySystem,
-  IWCGJQCore_140_230,
-  IWCGJQComps_140_230,
-  IWBootsTrapD10;
+  IWBootstrapD10,
+  FireDAC,
+  FireDACCommonDriver,
+  FireDACCommon;
 
 contains
-  IWBSCGJQRegion in 'IWBSCGJQRegion.pas';
+  IWBSFSearch in 'IWBSFSearch.pas',
+  IWBSFUtils in 'IWBSFUtils.pas';
 
 end.
-

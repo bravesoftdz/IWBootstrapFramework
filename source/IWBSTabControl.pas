@@ -110,9 +110,9 @@ type
     procedure SetTabPageVisibility(ATabIndex: integer; Visible: boolean); overload;
     procedure SetTabPageVisibility(ATabPage: TIWTabPage; Visible: boolean); overload;
     function AddNewTab:TIWTabPage;
+    property ActiveTabPage:TIWTabPage read GetActiveTabPage write SetActiveTabPage;
   published
     property ActivePage: Integer read FActivePage write SetActivePage;
-    property ActiveTabPage:TIWTabPage read GetActiveTabPage write SetActiveTabPage;
     property Align;
     property BSGridOptions: TIWBSGridOptions read FGridOptions write SetGridOptions;
     property BSTabOptions: TIWBSTabOptions read FTabOptions write SetTabOptions;
@@ -325,7 +325,8 @@ end;
 
 function TIWBSTabControl.GetActiveTabPage: TIWTabPage;
 begin
-  Result:= TIWTabPage(FPages[FActivePage]);
+  if FActivePage < FPages.Count then
+    Result:= TIWTabPage(FPages[FActivePage]);
 end;
 
 function TIWBSTabControl.GetAfterRender: TNotifyEvent;
