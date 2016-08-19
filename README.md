@@ -1,3 +1,6 @@
+# This is a FORK, original project: https://github.com/kattunga/IWBootstrapFramework .
+The changes in this repository are in experimental test and contain errors.
+
 # Intraweb Bootstrap 3 Framework for Delphi.
 
 This framework let you create responsive desktop and mobile applications with IntraWeb using Tweeter Bootstrap 3 library.
