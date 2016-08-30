@@ -1,6 +1,30 @@
 # This is a FORK, original project: https://github.com/kattunga/IWBootstrapFramework .
 The changes in this repository are in experimental test and contain errors.
 
+## News on this fork:
+* IWBSJQGrid;
+* IWBSFluidForm;
+* IWBSTable;
+* IWBSAccordion;
+* IWBSSelect2;
+* IWBSFluidForm;
+* IWBSFSearch(Firedac Only);
+
+## Improvments:
+* Added Close Button to Tabs in TIWBSTAbControl;
+* Added OnTabClose event to TIWBSTAbControl;
+* Added property ActiveTabPage, return and set one TIWTabPage to TIWBSTAbControl;
+* Synchronization with active tab in client and server side of TIWBSTAbControl;
+* Added Image property to TIWBSButtom;
+* Added Global Variable gIWBSGlobalThemeCss(Bootstrap Theme for all Forms);
+* Added Property LocalThemeCss to TIWBSLayoutMgr(Bootstrap Theme for Current Form);
+* Added Property Mask to TIWBSInput;
+* Added Property MaskSave to TIWBSInput, this permit maintain or remove Mask on save to Database;
+* Added property AutoComplete to TIWBSInput(To avoid brower AutoCompletion);
+
+For more minor changes see commit changelog.
+
+
 # Intraweb Bootstrap 3 Framework for Delphi.
 
 This framework let you create responsive desktop and mobile applications with IntraWeb using Tweeter Bootstrap 3 library.
