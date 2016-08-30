@@ -7,7 +7,6 @@ The changes in this repository are in experimental test and contain errors.
 * IWBSTable;
 * IWBSAccordion;
 * IWBSSelect2;
-* IWBSFluidForm;
 * IWBSFSearch(Firedac Only);
 
 ## Improvments:
