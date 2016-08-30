@@ -5,7 +5,7 @@ interface
 uses Classes, SysUtils, StrUtils, Forms,
      IWApplication, IWRenderContext, IWControl, IWHTML40Interfaces, IWBaseHTMLInterfaces, IWTypes,
      IWBaseInterfaces, IWHTMLTag, IWBaseRenderContext,
-     IWBSJsonDataObjects, IWBSCustomEvents;
+     IWBSJsonDataObjects, IWBSCustomEvents, IW.Common.RenderStream;
 
 const
   EOL = #13#10;
@@ -110,6 +110,8 @@ type
   IIWBSContainer = interface(IIWBaseContainer)
     ['{819FB21E-8204-450F-8778-3DEB56FDB062}']
     function InitContainerContext(AWebApplication: TIWApplication): TIWContainerContext;
+    procedure InternalBeforeRenderControls(var aRenderStream: TIWRenderStream);
+    procedure InternalAfterRenderControls(var aRenderStream: TIWRenderStream);
     function ParentContainer: IIWBaseContainer;
     function RegionDiv: TIWHTMLTag;
     function RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
@@ -147,7 +149,7 @@ procedure SetAsyncHtml(AApplication: TIWApplication; const HTMLName: string; con
 
 implementation
 
-uses IW.Common.System, IW.Common.RenderStream, IWBaseHTMLControl, IWForm,
+uses IW.Common.System, IWBaseHTMLControl, IWForm,
      IWBSUtils, IWBSCustomControl, IWBSRegionCommon, IWBSGlobal;
 
 {$region 'TIWBSGridOptions'}

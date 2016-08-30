@@ -95,7 +95,7 @@
     text-indent: 3px;
     color: #feffff;
     background-color: #a1a1cc;
-    z-index: 2000;
+    z-index: 1000;
     border-radius: 0 6px 0 0;
 }
 

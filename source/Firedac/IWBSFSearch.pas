@@ -4,11 +4,11 @@ interface
 
 uses
 
-  Classes, Winapi.Windows, vcl.Graphics, System.SysUtils,
+  Classes, Winapi.Windows, Graphics, System.SysUtils,
   IWRenderContext, IWHTMLTag, IWXMLTag, FireDAC.Comp.Client, IWDBGrids,
-  IWForm, vcl.Forms, FireDAC.Stan.Option, IW.HTTP.Request, IW.HTTP.Reply,
+  IWForm, Forms, FireDAC.Stan.Option, IW.HTTP.Request, IW.HTTP.Reply,
   Data.DB, IWCompGridCommon, IWCompEdit, System.Math,
-  vcl.Controls, IWBSButton, IWBSInput, IWBSFUtils, IWApplication, IWBSTable,
+  Controls, IWBSButton, IWBSInput, IWBSFUtils, IWApplication, IWBSTable,
   IWBSRestServer, IWBSGlobal, IW.Common.Strings, IWBSUtils, IWBSCommon,
   IW.Common.System;
 
@@ -123,6 +123,7 @@ type
     FKey: Word;           // ----------v
     FShift: TShiftState;
     FDropDownVisible: Boolean;
+    FSqlSearchParameters: string;
     // Usados para armazenar a key pressionada para a busca da lista atrazada pelo timer
   //  procedure SetTopLabel(const Value: string);
   //  procedure SetTopLabelCss(const Value: string);
@@ -154,6 +155,7 @@ type
       aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
     procedure DoOnAsyncSelect(aParams:TStringList);
     procedure SetDropDownVisible(const Value: Boolean);
+    procedure SetSqlSearchParameters(const Value: string);
   protected
     procedure DoOnAsyncKeyUp(aParams: TStringList); override;
     procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
@@ -212,16 +214,16 @@ type
     property SelecionaAoClicar: Boolean read FSelecionaAoClicar write SetSelecionaAoClicar
       default False;
     property DropDownVisible:Boolean read FDropDownVisible write SetDropDownVisible;
+    //parameters to add in where clause, sample: 'AGE = 25' or  'NAME = ''john'' and AGE = 21'
+    property SqlSearchParameters:string read FSqlSearchParameters write SetSqlSearchParameters;
   end;
 
-procedure Register;
+
 
 implementation
 
-procedure Register;
-begin
-  RegisterComponents('IW BootsTrap', [TIWBSFSearch]);
-end;
+
+
 
 procedure TIWBSFSearch.FakeKeyUp(Sender: TObject; aParams: TStringList);
 begin
@@ -386,6 +388,8 @@ begin
             end;
         end;
     end;
+  if Trim(FSqlSearchParameters) <> '' then
+    FQryBusca.SQL.Add(FSqlSearchParameters);
   if FCampoOrdenacao = '' then
     FQryBusca.IndexFieldNames := FCamposBusca.Items[0].Campo
   else
@@ -512,6 +516,7 @@ begin
   // Self.TabStop:=True;
   FAlturaLista       := 265;
   FSelecionaAoClicar := False;
+  FSqlSearchParameters:= '';
 
   FQryBusca := TFDQuery.Create(self);
   FQryBusca.FetchOptions.RecsMax:= 10;
@@ -754,6 +759,11 @@ begin
 end;
 
 
+
+procedure TIWBSFSearch.SetSqlSearchParameters(const Value: string);
+begin
+  FSqlSearchParameters := Value;
+end;
 
 procedure TIWBSFSearch.UpdateDropOptions;
 var

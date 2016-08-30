@@ -25,15 +25,20 @@ package IWBSFiredac;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
+  DesignIDE,
   rtl,
   vcl,
-  IWBootstrapD10,
   FireDAC,
   FireDACCommonDriver,
-  FireDACCommon;
+  FireDACCommon,
+  vclimg,
+  inet,
+  Intraweb_14_D10,
+  IWBootstrapD10;
 
 contains
   IWBSFSearch in 'IWBSFSearch.pas',

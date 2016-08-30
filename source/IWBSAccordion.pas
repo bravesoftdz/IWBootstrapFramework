@@ -1,7 +1,7 @@
 unit IWBSAccordion;
 
 interface
-  uses   System.Classes, Vcl.Controls, IWBSRegion, IWBSCustomControl,
+  uses   System.Classes, Controls, IWBSRegion, IWBSCustomControl,
   IWHTMLTag, IWRenderContext, IWBaseRenderContext, IW.Common.RenderStream,
   IWMarkupLanguageTag, IWBSRegionCommon, IWBaseInterfaces, System.StrUtils;
 

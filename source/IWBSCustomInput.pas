@@ -294,6 +294,8 @@ begin
             else
               if FInputType = bsitNumber then
                 LField.AsFloat := StrToFloat(LText, LFormatSettings)
+              else if FInputType = bsitDate then
+                LField.AsDateTime := StrToDate(LText, LFormatSettings)
               else if FInputType = bsitDateTimeLocal then  // agregar todos los tipos fecha que hay
                 LField.AsDateTime := StrToDateTime(ReplaceStr(LText,'T',' '), LFormatSettings)
               else

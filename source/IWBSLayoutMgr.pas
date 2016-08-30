@@ -34,7 +34,7 @@ implementation
 uses
   IWBaseForm, IWGlobal, IWHTML40Interfaces, IWTypes, IWHTMLContainer, IWBaseInterfaces, IWBaseControl, IWLists, IWURL,
   IWRegion, IW.Common.Strings, IWMimeTypes, IWApplication,
-  IWBSGlobal, IWBSRegionCommon, IWBSCommon, IWBSTabControl, IWBSFluidForm;
+  IWBSGlobal, IWBSCommon, IWBSTabControl, IWBSFluidForm;
 
 constructor TIWBSLayoutMgr.Create(AOnwer: TComponent);
 begin
@@ -222,13 +222,17 @@ var
   LComponent: IIWBaseHTMLComponent;
   xCompContext: TIWCompContext;
   LHTML: TIWHTMLTag;
+  InterfContainer:IIWBSContainer;
 begin
   LTmp := TIWRenderStream.Create(True, True);
   try
 
-    // TIWBSTabControl (investigate how to move this to IWBSTabControl)
+   (* // TIWBSTabControl (investigate how to move this to IWBSTabControl)
     if Container.InterfaceInstance.ClassNameIs('TIWBSTabControl') then
-      LTmp.WriteLine('<div class="tab-content">');
+      LTmp.WriteLine('<div class="tab-content">');  *)
+
+    if Supports(Container.InterfaceInstance, IIWBSContainer, InterfContainer) then
+      InterfContainer.InternalBeforeRenderControls(LTmp);
 
     // render controls
     LControls := TList.Create;
@@ -260,9 +264,13 @@ begin
       LControls.Free;
     end;
 
-    // close tabs
+    (*// close tabs
     if Container.InterfaceInstance.ClassNameIs('TIWBSTabControl') then
-      LTmp.WriteLine('</div>');
+      LTmp.WriteLine('</div>'); *)
+
+    if Supports(Container.InterfaceInstance, IIWBSContainer, InterfContainer) then
+      InterfContainer.InternalAfterRenderControls(LTmp);
+
 
     // write to buffer
     if Container.InterfaceInstance is TIWBaseForm then

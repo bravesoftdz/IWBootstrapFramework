@@ -5,8 +5,8 @@ interface
 uses
   SysUtils, Classes, StrUtils,
   IWApplication, IWBaseRenderContext, IWControl, IWBaseInterfaces,
-  IWCompTabControl,
-  IWRenderContext, IWHTMLTag, IWBSCommon, IWBSRegionCommon, IWXMLTag, IW.Common.RenderStream, IWBSCustomEvents;
+  IWCompTabControl,IWBSCommon, IWBSRegionCommon,
+  IWRenderContext, IWHTMLTag,  IWXMLTag, IW.Common.RenderStream, IWBSCustomEvents;
 
 type
   TIWBSCloseTabAction = (bstabFree, bstabHide, bstabNone);
@@ -90,6 +90,8 @@ type
     function InitContainerContext(AWebApplication: TIWApplication): TIWContainerContext; override;
     procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); virtual;
     procedure InternalRenderStyle(AStyle: TStringList); virtual;
+    procedure InternalBeforeRenderControls(var aRenderStream: TIWRenderStream); virtual;
+    procedure InternalAfterRenderControls(var aRenderStream: TIWRenderStream); virtual;
     function RenderAsync(AContext: TIWCompContext): TIWXMLTag; override;
     procedure RenderComponents(AContainerContext: TIWContainerContext; APageContext: TIWBasePageContext); override;
     function RenderCSSClass(AComponentContext: TIWCompContext): string; override;
@@ -246,14 +248,18 @@ begin
 end;
 
 function TIWBSTabControl.AddNewTab: TIWTabPage;
+var
+  LTabOrder:Integer;
 begin
   Result:= TIWTabPage.Create(Self);
   try
     Result.Title:= 'Page' + IntToStr(FPages.Count);
     Result.Name:= Self.Name + 'Page' + IntToStr(FPages.Count);
-    Result.Parent:= Self;
-    Result.TabOrder:=  FPages.Count;
+    LTabOrder:= FPages.Count;
+    //Result.TabOrder:=  FPages.Count;
     //FPages.Add(Result);
+    Result.Parent:= Self;
+    Result.TabOrder:= LTabOrder;
     AsyncRefreshControl;
   except
     FreeAndNil(Result);
@@ -449,6 +455,18 @@ begin
   if not (Self.LayoutMgr is TIWBSLayoutMgr) then
     Self.LayoutMgr := TIWBSLayoutMgr.Create(Self);
   Result := inherited;
+end;
+
+procedure TIWBSTabControl.InternalAfterRenderControls(
+  var aRenderStream: TIWRenderStream);
+begin
+  aRenderStream.WriteLine('</div>');
+end;
+
+procedure TIWBSTabControl.InternalBeforeRenderControls(
+  var aRenderStream: TIWRenderStream);
+begin
+  aRenderStream.WriteLine('<div class="tab-content">');
 end;
 
 procedure TIWBSTabControl.InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList);

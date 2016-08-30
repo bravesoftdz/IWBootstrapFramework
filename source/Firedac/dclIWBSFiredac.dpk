@@ -1,4 +1,4 @@
-package dclIWBootstrapD10;
+package dclIWBSFiredac;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,23 +25,23 @@ package dclIWBootstrapD10;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'IntraWeb Bootstrap Framework'}
 {$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  DesignIDE,
-  vclimg,
+  rtl,
+  VCL,
+  designide,
   dbrtl,
   inet,
-  IWBootstrapD10,
+  FireDAC,
+  FireDACCommonDriver,
+  FireDACCommon,
   Intraweb_14_D10,
-  dclIntraweb_14_D10;
+  dclIntraweb_14_D10,
+  IWBootstrapD10;
 
 contains
-  IWBSRegister in 'IWBSRegister.pas',
-  glyphicons in 'glyphicons.pas',
-  IWBSAccordionEditor in 'IWBSAccordionEditor.pas',
-  IWBSItemsEditor in 'IWBSItemsEditor.pas' {frmValueListEditor};
+  IWBSFRegister in 'IWBSFRegister.pas';
 
 end.

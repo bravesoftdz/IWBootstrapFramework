@@ -1,8 +1,8 @@
-unit IWBSAccordionEditor;
+﻿unit IWBSAccordionEditor;
 
 interface
   uses
-     DesignEditors, DesignIntf, VCL.Forms, IWBSAccordion;
+     DesignEditors, DesignIntf, Forms, IWBSAccordion;
 
   type
 

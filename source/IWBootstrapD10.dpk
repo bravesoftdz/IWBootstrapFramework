@@ -34,7 +34,8 @@ requires
   vcl,
   vclimg,
   inet,
-  Intraweb_14_D10;
+  Intraweb_14_D10,
+  vcldb;
 
 contains
   IWBSUtils in 'IWBSUtils.pas',
@@ -62,7 +63,9 @@ contains
   IWBSTable in 'IWBSTable.pas',
   IWBSSelect2 in 'IWBSSelect2.pas',
   IWBSAccordion in 'IWBSAccordion.pas',
-  IWBSFluidForm in 'IWBSFluidForm.pas';
+  IWBSFluidForm in 'IWBSFluidForm.pas',
+  IWBSRepeater in 'IWBSRepeater.pas',
+  IWBSJQGrid in 'IWBSJQGrid.pas';
 
 end.
 

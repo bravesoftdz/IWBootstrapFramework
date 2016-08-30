@@ -14,15 +14,19 @@ type
   private
     FMask: string;
     FAutoComplete: Boolean;
+    FMaskSave: Boolean;
     procedure SetMask(const Value: string);
     procedure SetAutoComplete(const Value: Boolean);
+    procedure SetMaskSave(const Value: Boolean);
   protected
     procedure InternalRenderHTML(const AHTMLName: string; AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag); override;
+    procedure InternalSetValue(const ASubmitValue: string; var ATextValue: string; var ASetFieldValue: boolean); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
     property InputType default bsitText;
     property Mask:string read FMask write SetMask;
+    property MaskSave:Boolean read FMaskSave write SetMaskSave default False;
     //FAutocomplete for websites it is good, but for applications it not intended
     property AutoComplete:Boolean read FAutoComplete write SetAutoComplete default False;
   end;
@@ -213,6 +217,26 @@ begin
     end;
 end;
 
+procedure TIWBSInput.InternalSetValue(const ASubmitValue: string;
+  var ATextValue: string; var ASetFieldValue: boolean);
+Var
+  I : Integer ;
+  LenValue : Integer;
+begin
+  if (FMask = '') or FMaskSave then
+    ATextValue := ASubmitValue
+  else
+    begin
+      ATextValue := '' ;
+      LenValue := Length( ASubmitValue ) ;
+      For I := 1 to LenValue do
+      begin
+       if (CharIsAlphaNum(ASubmitValue[I])) or (Pos(ASubmitValue[I], FMask) = 0) then
+         ATextValue := ATextValue + ASubmitValue[I];
+      end;
+    end;
+end;
+
 procedure TIWBSInput.SetAutoComplete(const Value: Boolean);
 begin
   FAutoComplete := Value;
@@ -228,6 +252,11 @@ begin
       else
         TIWBSGlobal.IWBSRemoveGlobalLinkFile(gIWBSLibPath + '/maskedinput/jquery.maskedinput.min.js');
     end;
+end;
+
+procedure TIWBSInput.SetMaskSave(const Value: Boolean);
+begin
+  FMaskSave := Value;
 end;
 
 {$endregion}

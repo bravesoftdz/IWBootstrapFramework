@@ -2,7 +2,7 @@ unit IWBSRegister;
 
 interface
 
-uses Classes, SysUtils, StrUtils, DesignEditors, IWDsnPaintHandlers;
+uses Classes, System.StrUtils, System.SysUtils,  DesignEditors, IWDsnPaintHandlers;
 
 type
   TGlyphiconEditor = class(TEnumProperty)
@@ -62,25 +62,30 @@ type
     procedure Paint; override;
   end;
 
-procedure Register;
-
-implementation
-
-uses DesignIntf, Windows, Forms, Dialogs, Graphics,
-     glyphicons, IWBaseControl,
-     IWBSLayoutMgr, IWBSControls, IWBSCustomInput,
-     IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl,
-     IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML, IWBSTable,
-     IWBSSelect2, IWBSAccordion, IWBSAccordionEditor, IWBSFluidForm;
-
-const
+  const
   CNST_DEFAULTFONTNAME = 'Tahoma';
   CNST_GLYPHICONSFONT = 'GLYPHICONS Halflings';
   CNST_PROPORTIONALFONT = 'Courier New';
 
 var
-  slGlyphicons: TStringList;
   lFontAdvice: boolean = True;
+  slGlyphicons: TStringList;
+
+
+
+
+procedure Register;
+
+implementation
+
+uses Windows, Forms, Dialogs, Graphics,
+    DesignIntf,glyphicons, IWBaseControl,
+     IWBSLayoutMgr, IWBSControls, IWBSCustomInput,
+     IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl,
+     IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML, IWBSTable,
+     IWBSSelect2, IWBSAccordion, IWBSAccordionEditor, IWBSFluidForm,
+     IWBSItemsEditor, IWBSRepeater, IWBSJQGrid;
+
 
 // advice to install glyphicon font
 procedure GlyphiconsFontAdvice;
@@ -615,11 +620,13 @@ begin
   RegisterComponents('IW BootsTrap', [TIWBSMemo]);
   RegisterComponents('IW BootsTrap', [TIWBSMemoHtml]);
   RegisterComponents('IW BootsTrap', [TIWBSSelect]);
+  RegisterPropertyEditor(TypeInfo(TStringList), TIWBSSelect, 'Items', TValueListPropertyEditor);
 
   RegisterComponents('IW BootsTrap', [TIWBSCheckBox]);
   RegisterComponents('IW BootsTrap', [TIWBSRadioButton]);
 
   RegisterComponents('IW BootsTrap', [TIWBSRadioGroup]);
+  RegisterPropertyEditor(TypeInfo(TStringList), TIWBSRadioGroup, 'Items', TValueListPropertyEditor);
 
   RegisterComponents('IW BootsTrap', [TIWBSButton]);
   RegisterPropertyEditor(TypeInfo(string), TIWBSButton,'BSGlyphicon', TGlyphiconEditor);
@@ -640,14 +647,18 @@ begin
   RegisterComponents('IW BootsTrap', [TIWBSTabControl]);
 
   RegisterComponents('IW BootsTrap', [TIWBSTable]);
+  RegisterComponents('IW BootsTrap', [TIWBSJQGrid]);
 
   RegisterComponents('IW BootsTrap', [TIWBSSelect2]);
+  RegisterPropertyEditor(TypeInfo(TStringList), TIWBSSelect2, 'Items', TValueListPropertyEditor);
 
   RegisterComponents('IW BootsTrap', [TIWBSAccordion]);
  // RegisterClass('TIWBSAccordionItem');
   RegisterComponentEditor(TIWBSAccordion, TIWBSAccordionEditor);
 
   RegisterComponents('IW BootsTrap', [TIWBSFluidForm]);
+
+  RegisterComponents('IW BootsTrap', [TIWBSRepeater]);
 
   UnlistPublishedProperty(TIWBSCustomControl, 'SkinId');
   UnlistPublishedProperty(TIWBSCustomControl, 'StyleRenderOptions');
@@ -662,6 +673,7 @@ begin
   UnlistPublishedProperty(TIWBSTabControl, 'InactiveTabColor');
 
   UnlistPublishedProperty(TIWBSTable, 'TagType');
+  UnlistPublishedProperty(TIWBSJQGrid, 'TagType');
 
   UnlistPublishedProperty(TIWBSTable, 'ScriptParams');
 
@@ -691,6 +703,7 @@ initialization
   IWRegisterPaintHandler('TIWBSRadioButton',TIWBSPaintHandlerCustomCheck);
   IWRegisterPaintHandler('TIWBSRadioGroup',TIWBSPaintHandlerRadioGroup);
 
+
   IWRegisterPaintHandler('TIWBSButton',TIWBSPaintHandlerCustomButton);
   IWRegisterPaintHandler('TIWBSDropDown',TIWBSPaintHandlerCustomButton);
 
@@ -708,12 +721,15 @@ initialization
 
   IWRegisterPaintHandler('TIWBSTable',TIWBSPaintHandlerText);
 
+  IWRegisterPaintHandler('TIWBSJQGrid',TIWBSPaintHandlerText);
+
   IWRegisterPaintHandler('TIWBSSelect2',TIWBSPaintHandlerCustomInput);
 
   IWRegisterPaintHandler('TIWBSAccordion',TIWBSPaintHandlerRegion);
 
   IWRegisterPaintHandler('TIWBSFluidForm',TIWBSPaintHandlerRegion);
 
+  IWRegisterPaintHandler('TIWBSRepeater',TIWBSPaintHandlerRegion);
 
 finalization
   slGlyphicons.Free;
@@ -749,10 +765,14 @@ finalization
 
   IWUnRegisterPaintHandler('TIWBSTable');
 
+  IWUnRegisterPaintHandler('TIWBSJQGrid');
+
   IWUnRegisterPaintHandler('TIWBSSelect2');
 
   IWUnRegisterPaintHandler('TIWBSAccordion');
 
   IWUnRegisterPaintHandler('TIWBSFluidForm');
+
+  IWUnRegisterPaintHandler('TIWBSRepeater');
 
 end.

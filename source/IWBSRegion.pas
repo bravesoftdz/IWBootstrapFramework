@@ -5,7 +5,7 @@ interface
 uses
   SysUtils, Classes, Controls, Forms, StrUtils,
   IWVCLBaseContainer, IWApplication, IWBaseRenderContext,
-  IWBaseContainerLayout, IWContainer, IWControl, IWHTMLContainer, IWHTML40Container, IWRegion, IW.Common.Strings,
+   IWContainer, IWControl, IWHTMLContainer, IWHTML40Container, IWRegion, IW.Common.Strings,
   IWRenderContext, IWHTMLTag, IWBaseInterfaces, IWXMLTag, IWMarkupLanguageTag, IW.Common.RenderStream,
   IWBSCommon, IWBSRegionCommon, IWBSLayoutMgr, IWScriptEvents, IWBSRestServer, IW.HTTP.Request, IW.HTTP.Reply, IWBSCustomEvents;
 
@@ -71,6 +71,8 @@ type
     procedure InternalRenderCss(var ACss: string); virtual;
     procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); virtual;
     procedure InternalRenderStyle(AStyle: TStringList); virtual;
+    procedure InternalBeforeRenderControls(var aRenderStream: TIWRenderStream); virtual;
+    procedure InternalAfterRenderControls(var aRenderStream: TIWRenderStream); virtual;
     property Released: boolean read FReleased;
     function RenderAsync(AContext: TIWCompContext): TIWXMLTag; override;
     procedure RenderComponents(AContainerContext: TIWContainerContext; APageContext: TIWBasePageContext); override;
@@ -565,6 +567,18 @@ procedure TIWBSCustomRegion.IWComponentsChanged(AComponent: TComponent);
 begin
   if not (csDestroying in ComponentState) and Assigned(Parent) then
     NotifyParentContainer(Parent);
+end;
+
+procedure TIWBSCustomRegion.InternalAfterRenderControls(
+  var aRenderStream: TIWRenderStream);
+begin
+// Occurs before render Child Controls
+end;
+
+procedure TIWBSCustomRegion.InternalBeforeRenderControls(
+  var aRenderStream: TIWRenderStream);
+begin
+  // Occurs after render Child Controls
 end;
 
 procedure TIWBSCustomRegion.InternalRenderCss(var ACss: string);

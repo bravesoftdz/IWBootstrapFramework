@@ -38,10 +38,9 @@ requires
   IndyProtocols,
   IndyCore,
   IndySystem,
-  IWCGJQCore_140_190,
-  Intraweb_14_DXE5,
-  IWCGJQComps_140_190,
-  IWBootstrapXE5;
+  IWCGJQCore_140_230,
+  Intraweb_14_D10,
+  IWBootstrapD10;
 
 contains
   IWBSCGJQRegister in 'IWBSCGJQRegister.pas';

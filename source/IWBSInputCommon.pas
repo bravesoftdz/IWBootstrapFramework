@@ -10,10 +10,35 @@ function IWBSCreateFormGroup(AParent: TControl; AParentForm: TIWBSInputForm; ATa
 function IWBSCreateInputFormGroup(AControl, AParent: TControl; ATag: TIWHTMLTag; const ACaption, AHTMLName: string): TIWHTMLTag;
 function IWBSCreateCheckBoxFormGroup(AParent: TControl; ATag: TIWHTMLTag; const ACss, ACaption, AHint, AHTMLName: string; AShowHint: boolean): TIWHTMLTag;
 function IWBSCreateInputGroupAddOn(ATag: TIWHTMLTag; const AHTMLName, css: string): TIWHTMLTag;
+function CharIsNum(const C: Char): Boolean;
+function CharIsAlpha(const C: Char): Boolean;
+function CharIsAlphaNum(const C: Char): Boolean;
+
 
 implementation
 
 uses IWBSRegionCommon, IWBaseHTMLControl;
+
+
+{$region 'String functions'}
+
+function CharIsNum(const C: Char): Boolean;
+begin
+  Result := ( C in ['0'..'9'] ) ;
+end ;
+
+function CharIsAlpha(const C: Char): Boolean;
+begin
+  Result := ( C in ['A'..'Z','a'..'z'] ) ;
+end ;
+
+function CharIsAlphaNum(const C: Char): Boolean;
+begin
+  Result := ( CharIsAlpha( C ) or CharIsNum( C ) );
+end ;
+
+{$endregion}
+
 
 {$region 'FormGroup functions'}
 function IWBSCreateFormGroup(AParent: TControl; AParentForm: TIWBSInputForm; ATag: TIWHTMLTag; const AHTMLName: string; ASpanDiv: boolean): TIWHTMLTag;

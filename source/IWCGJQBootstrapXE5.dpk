@@ -40,8 +40,7 @@ requires
   IndyCore,
   IndySystem,
   IWCGJQCore_140_230,
-  IWCGJQComps_140_230,
-  IWBootsTrapD10;
+  IWBootstrapD10;
 
 contains
   IWBSCGJQRegion in 'IWBSCGJQRegion.pas';
