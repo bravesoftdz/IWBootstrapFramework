@@ -7,7 +7,7 @@ uses
   IWBSCustomControl,
   IWTypes, IWHTMLTag,
   IWXMLTag, IWRenderContext, IWBaseInterfaces, IWHTML40Interfaces, IWScriptEvents, IWApplication,
-  IWBSCommon;
+  IWBSCommon, IWBSValidator, IWBSUtils;
 
 type
   TIWBSInputType = (bsitText, bsitPassword, bsitDateTimeLocal, bsitDate, bsitMonth, bsitTime, bsitWeek, bsitNumber, bsitEmail, bsitUrl, bsitSearch, bsitTel, bsitColor, bsitHidden);
@@ -25,12 +25,14 @@ type
     FInputType: TIWBSInputType;
     FReadOnly: Boolean;
     FRequired: Boolean;
+    FValidator: TIWBSValidator;
     procedure EditingChanged;
     function GetAsDateTime: TDateTime;
     function GetAsDouble: Double;
     function GetAsVariant: Variant;
     procedure SetAsDateTime(const Value: TDateTime);
     procedure SetAsDouble(const Value: Double);
+    procedure SetValidator(const Value: TIWBSValidator);
   protected
     FIsStatic: boolean;
     FSupportReadOnly: boolean;
@@ -79,6 +81,7 @@ type
     property ScriptEvents;
     property SubmitOnAsyncEvent default True;
     property Text: TCaption read GetText write SetText;
+    property Validator:TIWBSValidator read FValidator write SetValidator;
   end;
 
   TIWBSCustomTextInput = class(TIWBSCustomInput)
@@ -126,7 +129,7 @@ type
 implementation
 
 uses
-  IWBaseForm, IWDBCommon, IWDBStdCtrls, IWForm, IWMarkupLanguageTag;
+  IWBaseForm, IWDBCommon, IWDBStdCtrls, IWForm, IWMarkupLanguageTag, IWBSRegion;
 
 var
   LFormatSettings: TFormatSettings;
@@ -135,6 +138,7 @@ var
 constructor TIWBSCustomInput.Create(AOwner: TComponent);
 begin
   inherited;
+  FValidator:= nil;
   FAutoEditable := True;
   FAutoFocus := False;
   FCaption := '';
@@ -154,6 +158,13 @@ end;
 procedure TIWBSCustomInput.Invalidate;
 begin
   inherited;
+  if (Validator <> nil) and not IsDesignMode then //to force update validator for this field whith no focus on first error field
+    //IWBSExecuteAsyncJScript('$("#' + HTMLName + '").trigger(''change.bs.validator'');', False,False);
+   // IWBSExecuteAsyncJScript('$(''form'').validator(''validate'')',False, false);
+   IWBSExecuteAsyncJScript('var Validt = $("form").data(''bs.validator''); ' +
+                           'if (Validt) {' +
+                          'Validt.validateInput($("#'+ HTMLName + '"));};');
+
 end;
 
 function TIWBSCustomInput.GetAsDateTime: TDateTime;
@@ -272,6 +283,22 @@ begin
     FDbEditable := true;
 end;
 
+procedure TIWBSCustomInput.SetValidator(const Value: TIWBSValidator);
+var
+  LInputForm:TIWBSCustomInputForm;
+begin
+  if FValidator <> Value then
+    begin
+      FValidator := Value;
+        if not IsDesignMode then  //AV in DesignMode
+          begin
+            LInputForm:= IWBSFindParentInputForm(Self);
+            if LInputForm <> nil then
+              if LInputForm.ValidationEnabled then
+                IWBSExecuteAsyncJScript('$("#' + LInputForm.HTMLName + '").validator(''update'');',False, False);
+          end;
+    end;
+end;
 procedure TIWBSCustomInput.SetValue(const AValue: string);
 var
   LField: TField;

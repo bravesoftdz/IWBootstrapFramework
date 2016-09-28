@@ -135,9 +135,9 @@ begin
   end;
 
   // add global linkfiles
-  if TIWBSGlobal.IWBSLinkFiles <> nil then
-    for i := 0 to TIWBSGlobal.IWBSLinkFiles.Count-1 do
-      ABuffer.WriteLine(ParseLinkFile(LUrlBase, TIWBSGlobal.IWBSLinkFiles[i]));
+  if gIWBSLinkFiles <> nil then
+    for i := 0 to gIWBSLinkFiles.Count-1 do
+      ABuffer.WriteLine(ParseLinkFile(LUrlBase, gIWBSLinkFiles[i]));
 
   // add LayoutMgr linkfiles
   if FLinkFiles <> nil then

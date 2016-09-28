@@ -127,6 +127,8 @@ type
     procedure DoEditRow(aApplication: TIWApplication;
               aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
     procedure SetKeyField(const Value: string);
+    //To Set Intaernal Datasource
+    procedure SetDataSource(const Value: TDataSource); override;
   protected
      procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
   public
@@ -166,6 +168,8 @@ type
 
 
 implementation
+
+  uses IWBSUtils, IWDBStdCtrls;
 
 { TIWBSJQGrid }
 
@@ -388,7 +392,14 @@ begin
 		                  'lastRowSel = id;' +
                       'executeAjaxEvent("&key="+id, null, "{%htmlname%}.DoOnRowSel", true, null, true);' +
 	                '}' +
+              '};' +
+
+              'function internalBeforeRequest(){'+
+                            'var InEditMode = ($($("#' + HTMLName + '").jqGrid("getInd",lastRowSel,true)).attr("editable") === ''1'') || false;' +
+                            'return !InEditMode;' +
               '};'
+
+
   );
   AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnRowSel', DoOnRowSel);
 end;
@@ -410,6 +421,18 @@ begin
   if FColumns.Count = 0 then
     UpdateOptions;
   Result := inherited;
+  if (DataSource <> nil) and (not (DataSource.DataSet.State in [dsEdit, dsInsert])) then
+
+  IWBSExecuteAsyncJScript('$("#' + HTMLName + '").trigger("reloadGrid");');
+
+  (*  IWBSExecuteAsyncJScript(' var GridInEdit =
+
+
+  $("#' + HTMLName + '").trigger("reloadGrid")');
+
+     $($("#list").jqGrid("getInd",rowid,true)).attr("editable") === "1") {
+    // the row having id=rowid is in editing mode
+}      *)
 end;
 
 function TIWBSJQGrid.RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
@@ -455,6 +478,11 @@ begin
       FColumns.Assign(Value);
       UpdateOptions;
     end;
+end;
+
+procedure TIWBSJQGrid.SetDataSource(const Value: TDataSource);
+begin
+  inherited;
 end;
 
 procedure TIWBSJQGrid.SetGroupCollapse(const Value: Boolean);
@@ -877,6 +905,7 @@ begin
     if LGridEditable then
       begin
         OptTxt.Values['onSelectRow'] :=  'internalSelectRow';
+        OptTxt.Values['beforeRequest'] := 'internalBeforeRequest';
         OptTxt.Values['editurl']:= '"'+ IWBSRegisterRestCallBack(gGetWebApplicationThreadVar, HTMLName +'.editurl', DoEditRow) + '"';
       end;
 
@@ -914,12 +943,6 @@ begin
   finally
     OptColumn.Free;
   end;
-  if LGridEditable then
-    begin
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/grid.common.js');
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/grid.inlinedit.js');
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.fmatter.js')
-    end;
 end;
 
 { TIWBSJQGridColumn }
@@ -1049,21 +1072,29 @@ begin
     end;
 end;
 
+
 initialization
 
 // Enable CSS and JS for JQGrid Plugin
 if DebugHook <> 0 then
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/ui.jqgrid.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.jqGrid.js');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/i18n/grid.locale-pt-br.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/ui.jqgrid.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.jqGrid.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/i18n/grid.locale-pt-br.js');
   end
 else
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/ui.jqgrid.min.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.jqGrid.min.js');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/i18n/grid.locale-pt-br.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/ui.jqgrid.min.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.jqGrid.min.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/i18n/grid.locale-pt-br.js');
   end;
+
+  (*if LGridEditable then   //Not necessary, include in ui.jqgrid.js;
+    begin
+      IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/grid.common.js');
+      IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/grid.inlinedit.js');
+      IWBSAddGlobalLinkFile('/<iwbspath>/jqgrid/jquery.fmatter.js')
+    end; *)
 
 // this enable the rest event server
 IWBSRegisterRestServerHandler;

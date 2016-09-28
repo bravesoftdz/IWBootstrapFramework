@@ -153,6 +153,8 @@ var
   bmrk: TBookmark;
   r, i, f, t: integer;
 begin
+  If (NOT Assigned(DataSource)) or (not Assigned(DataSource.DataSet)) then
+    Exit;
   // here we return the data in json format
   // see format on: http://bootstrap-table.wenzhixin.net.cn/getting-started/#usage-via-javascript
   f := StrToIntDef(aRequest.QueryFields.Values['offset'], 0);
@@ -294,10 +296,6 @@ begin
   if FMobileResponsive <> Value then
     begin
       FMobileResponsive := Value;
-      if FMobileResponsive then
-        TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table-mobile.js')
-      else
-        TIWBSGlobal.IWBSRemoveGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table-mobile.js');
       UpdateOptions;
     end;
 end;
@@ -585,14 +583,17 @@ initialization
 // Enable CSS and JS for Table Plugin
 if DebugHook <> 0 then
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.js');
   end
 else
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
   end;
+if gIWBSLibTableMobileResponsive then
+  IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table-mobile.js');
+
 
 // this enable the rest event server
 IWBSRegisterRestServerHandler;

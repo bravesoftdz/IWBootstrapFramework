@@ -3,22 +3,24 @@ unit IWBSFluidForm;
 interface
 
 uses
-  IWBSRegion, System.Classes, IWRenderContext, IWHTMLTag, IW.HTTP.Request,
-  IWApplication, IW.HTTP.Reply, IWBSRestServer;
+  IWBSRegion, System.Classes, IWRenderContext, IWHTMLTag, IWXMLTag, IW.HTTP.Request,
+  IWApplication, IW.HTTP.Reply, IWBSRestServer, IWBSUtils;
 
 
   type
 
   TIWBSFormEncType = (iwbsfeDefault, iwbsfeMultipart, iwbsfeText);
 
-  TIWBSFluidForm = class(TIWBSCustomRegion)
+  TIWBSFluidForm = class(TIWBSCustomInputForm)
   private
     FEncType: TIWBSFormEncType;
     FOnSubmit: TIWBSInputFormSubmitEvent;
     procedure DoSubmit(aApplication: TIWApplication; aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
   protected
     procedure InternalRenderCss(var ACss: string); override;
+    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
     function RenderHTML(AContext: TIWCompContext): TIWHTMLTag; override;
+    function RenderAsync(AContext: TIWCompContext): TIWXMLTag; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -40,7 +42,6 @@ constructor TIWBSFluidForm.Create(AOwner: TComponent);
 begin
   inherited;
   FEncType := iwbsfeDefault;
-  FTagType := 'form';
 end;
 
 destructor TIWBSFluidForm.Destroy;
@@ -67,15 +68,33 @@ begin
   TIWBSCommon.AddCssClass(ACss, 'iwbs-form-fluid');
 end;
 
+procedure TIWBSFluidForm.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
+begin
+  inherited;
+  if ValidationEnabled and  Hasvalidator then
+    AScript.Add('$("#' + HTMLName + '").validator(''validate'');');
+end;
+
+function TIWBSFluidForm.RenderAsync(AContext: TIWCompContext): TIWXMLTag;
+begin
+  Result:= inherited;
+  if ValidationEnabled and  Hasvalidator then
+    IWBSExecuteAsyncJScript('$("#' + HTMLName + '").validator(''validate'');',False, False);
+end;
+
 function TIWBSFluidForm.RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
 var
-  LParentForm: TIWBSInputForm;
+  LParentForm: TIWBSCustomInputForm;
 begin
   LParentForm := IWBSFindParentInputForm(Parent);
   if LParentForm <> nil then
     raise Exception.Create('forms can not be nested, you try to put '+Name+' inside '+LParentForm.Name);
 
   Result := inherited;
+
+  if ValidationEnabled and HasValidator then
+    Result.AddStringParam('data-toggle', 'validator');
 
   if Assigned(FOnSubmit) then
     begin

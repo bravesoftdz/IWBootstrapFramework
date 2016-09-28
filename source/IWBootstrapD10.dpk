@@ -65,7 +65,8 @@ contains
   IWBSAccordion in 'IWBSAccordion.pas',
   IWBSFluidForm in 'IWBSFluidForm.pas',
   IWBSRepeater in 'IWBSRepeater.pas',
-  IWBSJQGrid in 'IWBSJQGrid.pas';
+  IWBSJQGrid in 'IWBSJQGrid.pas',
+  IWBSValidator in 'IWBSValidator.pas';
 
 end.
 

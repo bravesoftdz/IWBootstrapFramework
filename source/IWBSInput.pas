@@ -130,7 +130,7 @@ type
 
 implementation
 
-uses IW.Common.System, IWResourceStrings, IWBSInputCommon, IWBSUtils;
+uses IW.Common.System, IWResourceStrings, IWBSInputCommon, IWBSUtils, IWBSValidator;
 
 {$region 'TIWBSInput'}
 constructor TIWBSInput.Create(AOwner: TComponent);
@@ -185,6 +185,8 @@ begin
         if TabIndex <> 0 then
           AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
         AHTMLTag.AddStringParam('autocomplete', IfThen(FAutoComplete, 'on', 'off'));
+        if Validator <> nil then
+          Validator.RenderValidation(AHTMLTag);
         AHTMLTag.AddStringParam('style', ActiveStyle);
       except
         FreeAndNil(AHTMLTag);
@@ -194,7 +196,7 @@ begin
   if FMask <> '' then
     begin
       MaskTag:= TIWHTMLTag.CreateTag('script');
-      MaskTag.Contents.AddText( '$("#' + HTMLName + '").mask("999.999.999-99",{placeholder:" "});');
+      MaskTag.Contents.AddText( '$("#' + HTMLName + '").mask("' + FMask+ '",{placeholder:" "});');
       AHTMLTag.Contents.AddTagAsObject(MaskTag);
     end;
 
@@ -247,10 +249,6 @@ begin
   if FMask <> Value then
     begin
       FMask := Value;
-      if FMask <> '' then
-        TIWBSGlobal.IWBSAddGlobalLinkFile(gIWBSLibPath + '/maskedinput/jquery.maskedinput.min.js' )
-      else
-        TIWBSGlobal.IWBSRemoveGlobalLinkFile(gIWBSLibPath + '/maskedinput/jquery.maskedinput.min.js');
     end;
 end;
 
@@ -331,6 +329,8 @@ begin
     AHTMLTag.AddIntegerParam('rows', FRows);
     if TabIndex <> 0 then
       AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
+    if Validator <> nil then
+      Validator.RenderValidation(AHTMLTag);
     AHTMLTag.AddStringParam('style', ActiveStyle);
     AHTMLTag.Contents.AddText(TextToHTML(FText,false,false));
   except
@@ -417,6 +417,8 @@ begin
       AHTMLTag.Add('checked');
     if TabIndex <> 0 then
       AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
+    if Validator <> nil then
+      Validator.RenderValidation(AHTMLTag);
     AHTMLTag.AddStringParam('style', ActiveStyle);
   except
     FreeAndNil(AHTMLTag);
@@ -507,6 +509,8 @@ begin
     AHTMLTag.AddStringParam('value', 'on');
     if TabIndex <> 0 then
       AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
+    if Validator <> nil then
+      Validator.RenderValidation(AHTMLTag);
     AHTMLTag.AddStringParam('style', ActiveStyle);
   except
     FreeAndNil(AHTMLTag);
@@ -673,6 +677,8 @@ begin
       AHTMLTag.Add('disabled');
     if AutoFocus then
       AHTMLTag.Add('autofocus');
+    if Validator <> nil then
+      Validator.RenderValidation(AHTMLTag);
     if TabIndex <> 0 then
       AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
     for i := 0 to Items.Count - 1 do begin
@@ -692,6 +698,7 @@ begin
     AHTMLTag := IWBSCreateInputFormGroup(Self, Parent, AHTMLTag, Caption, AHTMLName);
 end;
 {$endregion}
+
 
 {$region 'TIWBSRadioGroup'}
 function TIWBSRadioGroup.InputSelector: string;
@@ -727,6 +734,9 @@ begin
     AHTMLTag.AddClassParam('radio');
     if TabIndex <> 0 then
       AHTMLTag.AddStringParam('tabindex', IntToStr(TabIndex));
+    if Validator <> nil then
+      Validator.RenderValidation(AHTMLTag);
+
     AHTMLTag.AddStringParam('style', ActiveStyle);
     for i := 0 to Items.Count - 1 do begin
       with AHTMLTag.Contents.AddTag('label') do begin
@@ -755,4 +765,6 @@ begin
 end;
 {$endregion}
 
+initialization
+   IWBSAddGlobalLinkFile('/<iwbspath>/maskedinput/jquery.maskedinput.min.js');
 end.

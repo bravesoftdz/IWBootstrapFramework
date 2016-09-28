@@ -222,7 +222,7 @@ var
   LPage:TIWTabPage;
 begin
   LCloseAction:= bstabHide;
-  LTabIndex:= StrToIntDef(aParams.Values[HTMLName+ '_input'], -1);
+  LTabIndex:= StrToIntDef(aParams.Values['page'], -1);
   if (LTabIndex > -1) and (LTabIndex < FPages.Count) then
     begin
       LPage:= TIWTabPage(FPages[LTabIndex]);
@@ -478,7 +478,7 @@ begin
   AScript.Add('$("#'+AHTMLName+'_tabs").off("show.bs.tab").on("show.bs.tab", function(e){ $("#'+AHTMLName+'_input").val($(e.target).attr("tabindex")).change(); });');
 
   //Add Close Button event
-  AScript.Add('$("#'+AHTMLName+'_tabs span.tab-close-btn").off("click").on("click", function(e){ executeAjaxEvent("&page="+$(e.target).attr("tabindex"), null, "'+AHTMLName+'.DoOnTabClose", true, null, true); });');
+  AScript.Add('$("#'+AHTMLName+'_tabs span.tab-close-btn").off("click").on("click", function(e){ executeAjaxEvent("&page=" + $(this).next().attr("tabindex"), null, "'+AHTMLName+'.DoOnTabClose", true, null, true); });');
   AContext.WebApplication.RegisterCallBack(AHTMLName+'.DoOnTabClose', DoOnTabClose);
 
   //To update server Tab Index to avoid change browser active tab if refresh page

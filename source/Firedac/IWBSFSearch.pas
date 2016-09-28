@@ -10,7 +10,7 @@ uses
   Data.DB, IWCompGridCommon, IWCompEdit, System.Math,
   Controls, IWBSButton, IWBSInput, IWBSFUtils, IWApplication, IWBSTable,
   IWBSRestServer, IWBSGlobal, IW.Common.Strings, IWBSUtils, IWBSCommon,
-  IW.Common.System;
+  IW.Common.System, IWBSInputCommon, IWBSRegion;
 
 type
   ThackGraphic = class(TGraphicControl);
@@ -343,7 +343,8 @@ begin
   // adiciona o Campo Chave no primeiro campo da SQL
   if FCampoChave <> '' then
     begin
-      if pos(FCampoChave, CamposBuscaSql) = 0 then
+      if (pos(',' + FCampoChave, CamposBuscaSql) = 0)
+      and (pos(FCampoChave + ',', CamposBuscaSql) = 0) then
         begin
           if CamposBuscaSql <> '' then
             CamposBuscaSql := FCampoChave + ',' + CamposBuscaSql
@@ -644,6 +645,7 @@ procedure TIWBSFSearch.InternalRenderHTML(const AHTMLName: string;
   AContext: TIWCompContext; var AHTMLTag: TIWHTMLTag);
 var
   DropTag:TIWHTMLTag;
+  DivTag:TIWHTMLTag;
 begin
   inherited;
   // Render Dropdown
@@ -652,7 +654,15 @@ begin
    if not FDropDownVisible then
      DropTag.AddStringParam('style', 'visibility:hidden; display:none;');
 
-   AHTMLTag.Contents.AddTagAsObject(DropTag);
+   if Caption <> '' then
+     AHTMLTag.Contents.AddTagAsObject(DropTag)
+   else
+    begin
+      DivTag:= TIWHTMLTAG.CreateTag('div');
+      DivTag.Contents.AddTagAsObject(AHTMLTag);
+      DivTag.Contents.AddTagAsObject(DropTag);
+      AHTMLTag:= DivTag;
+    end;
 end;
 
 procedure TIWBSFSearch.InternalRenderScript(AContext: TIWCompContext;
@@ -773,6 +783,9 @@ var
   KeyInclude:Boolean;
 begin
   KeyInclude:=False;
+  if FCampoChave = '' then
+    raise Exception.Create('CampoChave precisa ser setado com o nome do campo chave primária');
+
   OptColumns := '[';
   for J      := 0 to FColunas.Count - 1 do
     begin
@@ -828,7 +841,9 @@ begin
   //if not exists Key Column, add as Invisible
   if Not KeyInclude then
     begin
-      OptColumns := OptColumns + ',{"field":"' + FCampoChave
+      if OptColumns <> '[' then
+        OptColumns:= OptColumns + ',';
+      OptColumns := OptColumns + '{"field":"' + FCampoChave
                               + '","title":"' + FCampoChave
                               + '",sortable:false'
                               + ',visible:false}';
@@ -850,7 +865,7 @@ begin
     OptTxt.Values['mobileResponsive'] := 'true';
      OptTxt.Values['paginationVAlign'] := '"top"';
 
-    OptTxt.Values['showHeader']  := 'false';
+   //OptTxt.Values['showHeader']  := 'false';
     OptTxt.Values['showFooter']  := 'false';
     OptTxt.Values['showRefresh'] := 'false';
 
@@ -1112,13 +1127,13 @@ initialization
 // Enable CSS and JS for Table Plugin
 if DebugHook <> 0 then
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.js');
   end
 else
   begin
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
-    TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.css');
+    IWBSAddGlobalLinkFile('/<iwbspath>/bstable/bootstrap-table.min.js');
   end;
 
 // this enable the rest event server

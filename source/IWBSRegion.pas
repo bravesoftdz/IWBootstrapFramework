@@ -7,7 +7,8 @@ uses
   IWVCLBaseContainer, IWApplication, IWBaseRenderContext,
    IWContainer, IWControl, IWHTMLContainer, IWHTML40Container, IWRegion, IW.Common.Strings,
   IWRenderContext, IWHTMLTag, IWBaseInterfaces, IWXMLTag, IWMarkupLanguageTag, IW.Common.RenderStream,
-  IWBSCommon, IWBSRegionCommon, IWBSLayoutMgr, IWScriptEvents, IWBSRestServer, IW.HTTP.Request, IW.HTTP.Reply, IWBSCustomEvents;
+  IWBSCommon, IWBSRegionCommon, IWBSLayoutMgr, IWScriptEvents, IWBSRestServer,
+  IW.HTTP.Request, IW.HTTP.Reply, IWBSCustomEvents;
 
 type
   TIWBSCustomRegion = class(TIWCustomRegion, IIWBSComponent, IIWBSContainer)
@@ -65,11 +66,10 @@ type
     procedure set_Visible(Value: Boolean); override;
     procedure SetParent(AParent: TWinControl); override;
     {$hints on}
-
+    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); virtual;
     function ContainerPrefix: string; override;
     function InitContainerContext(AWebApplication: TIWApplication): TIWContainerContext; override;
     procedure InternalRenderCss(var ACss: string); virtual;
-    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); virtual;
     procedure InternalRenderStyle(AStyle: TStringList); virtual;
     procedure InternalBeforeRenderControls(var aRenderStream: TIWRenderStream); virtual;
     procedure InternalAfterRenderControls(var aRenderStream: TIWRenderStream); virtual;
@@ -98,6 +98,7 @@ type
     function IsStoredCustomRestEvents: Boolean;
     function JQSelector: string;
     procedure SetFocus; override;
+    function FindParentFrame:TCustomFrame;
   published
     property Align;
     property BSGridOptions: TIWBSGridOptions read FGridOptions write SetGridOptions;
@@ -128,7 +129,23 @@ type
 
   TIWBSInputFormSubmitEvent = procedure(aRequest: THttpRequest; aParams: TStrings) of object;
 
-  TIWBSInputForm = class(TIWBSCustomRegion)
+  TIWBSCustomInputForm = class(TIWBSCustomRegion)
+  private
+    FValidationEnabled: Boolean;
+  protected
+    procedure SetValidationEnabled(const Value: Boolean);
+    function Hasvalidator:Boolean;
+    function RenderHTML(AContext: TIWCompContext): TIWHTMLTag; override;
+    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    //For enable/disable Validations on this form
+    property ValidationEnabled:Boolean read FValidationEnabled write SetValidationEnabled default True;
+  end;
+
+
+  TIWBSInputForm = class(TIWBSCustomInputForm)
   private
     FEncType: TIWBSFormEncType;
     FFormType: TIWBSFormType;
@@ -137,7 +154,9 @@ type
     procedure DoSubmit(aApplication: TIWApplication; aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
   protected
     procedure InternalRenderCss(var ACss: string); override;
+    procedure InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList); override;
     function RenderHTML(AContext: TIWCompContext): TIWHTMLTag; override;
+    function RenderAsync(AContext: TIWCompContext): TIWXMLTag; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -260,18 +279,18 @@ type
     property OnAsyncHide: TIWAsyncEvent read FOnAsyncHide write FOnAsyncHide;
   end;
 
-function IWBSFindParentInputForm(AParent: TControl): TIWBSInputForm;
+function IWBSFindParentInputForm(AParent: TControl): TIWBSCustomInputForm;
 
 implementation
 
 uses IWForm, IWUtils, IW.Common.System, IWContainerLayout, IWBaseHTMLControl, IWBaseHTMLInterfaces,
-     IWBSUtils, IWBSInputCommon, IWBSScriptEvents, IWBSGlobal;
+     IWBSUtils, IWBSInputCommon, IWBSScriptEvents, IWBSGlobal, IWBSValidator;
 
 {$region 'help functions'}
-function IWBSFindParentInputForm(AParent: TControl): TIWBSInputForm;
+function IWBSFindParentInputForm(AParent: TControl): TIWBSCustomInputForm;
 begin
-  if AParent is TIWBSInputForm then
-    Result := TIWBSInputForm(AParent)
+  if AParent is TIWBSCustomInputForm then
+    Result := TIWBSCustomInputForm(AParent)
   else if AParent.Parent <> nil then
     Result := IWBSFindParentInputForm(AParent.Parent)
   else
@@ -322,6 +341,25 @@ begin
   FreeAndNil(FScriptParams);
   FreeAndNil(FStyle);
   inherited;
+end;
+
+function TIWBSCustomRegion.FindParentFrame: TCustomFrame;
+var
+  LParentFrame:TCustomFrame;
+  ControlP: TWinControl;
+begin
+  LParentFrame:= nil;
+  ControlP:= Self;
+  while (not (ControlP.Parent = nil))  do
+    begin
+      ControlP := ControlP.Parent;
+      if ControlP is TCustomFrame then
+        begin
+          LParentFrame:= TCustomFrame(ControlP);
+          Break;
+        end;
+    end;
+  Result:= LParentFrame;
 end;
 
 function TIWBSCustomRegion.get_ScriptEvents: TIWScriptEvents;
@@ -586,9 +624,10 @@ begin
   //
 end;
 
-procedure TIWBSCustomRegion.InternalRenderScript(AContext: TIWCompContext; const AHTMLName: string; AScript: TStringList);
+procedure TIWBSCustomRegion.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
 begin
-  //
+//
 end;
 
 procedure TIWBSCustomRegion.InternalRenderStyle(AStyle: TStringList);
@@ -682,7 +721,6 @@ begin
   FEncType := iwbsfeDefault;
   FFormOptions := TIWBSFormOptions.Create;
   FFormType := bsftVertical;
-  FTagType := 'form'
 end;
 
 destructor TIWBSInputForm.Destroy;
@@ -699,9 +737,73 @@ begin
     TIWBSCommon.AddCssClass(ACss, 'form-horizontal');
 end;
 
+procedure TIWBSInputForm.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
+begin
+  inherited;
+  if FValidationEnabled and  Hasvalidator then
+    AScript.Add('$("#' + HTMLName + '").validator(''validate'');');
+end;
+
 function TIWBSInputForm.GetRoleString: string;
 begin
   Result := 'form';
+end;
+
+constructor TIWBSCustomInputForm.Create(AOwner: TComponent);
+begin
+  inherited;
+  FTagType := 'form';
+  FValidationEnabled:=True;
+end;
+
+function TIWBSCustomInputForm.Hasvalidator: Boolean;
+var
+  LParentForm:TIWForm;
+  LParentFrame:TCustomFrame;
+  I: Integer;
+begin
+  Result:=False;
+  LParentFrame:= FindParentFrame;
+  if LParentFrame <> nil then // if InputForm is in Frame
+    begin                     //Check for validators in Parent Frame
+      for I := 0 to LParentFrame.ComponentCount -1 do
+        begin
+          if LParentFrame.Components[I] is TIWBSValidator then
+            begin
+              Result:=True;
+              Break;
+            end;
+        end;
+    end
+  else
+    begin
+      LParentForm := TIWForm.FindParentForm(Self);
+      if LParentForm <> nil then // if InputForm is in IWForm
+        begin                   //Check for validators in parent Form
+          for I := 0 to LParentForm.ContainerContext.ComponentsCount -1 do
+            begin
+              if LParentForm.ContainerContext.ComponentsList[I] is TIWBSValidator then
+                begin
+                  Result:=True;
+                  Break;
+                end;
+            end;
+        end;
+    end;
+end;
+
+procedure TIWBSCustomInputForm.InternalRenderScript(AContext: TIWCompContext;
+  const AHTMLName: string; AScript: TStringList);
+begin
+  inherited;
+
+end;
+
+function TIWBSCustomInputForm.RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
+begin
+  Result:= inherited;
+ // IWBSRenderScript(Self, AContext, Result);
 end;
 
 procedure TIWBSInputForm.DoSubmit(aApplication: TIWApplication; aRequest: THttpRequest; aReply: THttpReply; aParams: TStrings);
@@ -711,15 +813,25 @@ begin
   aReply.SendRedirect(aApplication.SessionInternalUrlBase);
 end;
 
+function TIWBSInputForm.RenderAsync(AContext: TIWCompContext): TIWXMLTag;
+begin
+  Result:= inherited;
+  if FValidationEnabled and  Hasvalidator then
+    IWBSExecuteAsyncJScript('$("#' + HTMLName + '").validator(''validate'');',False, False);
+end;
+
 function TIWBSInputForm.RenderHTML(AContext: TIWCompContext): TIWHTMLTag;
 var
-  LParentForm: TIWBSInputForm;
+  LParentForm: TIWBSCustomInputForm;
 begin
   LParentForm := IWBSFindParentInputForm(Parent);
   if LParentForm <> nil then
     raise Exception.Create('forms can not be nested, you try to put '+Name+' inside '+LParentForm.Name);
 
   Result := inherited;
+
+  if FValidationEnabled and HasValidator then
+    Result.AddStringParam('data-toggle', 'validator');
 
   if Assigned(FOnSubmit) then
     begin
@@ -733,6 +845,11 @@ begin
   else
     Result.AddStringParam('onSubmit', 'return FormDefaultSubmit();');
 end;
+procedure TIWBSCustomInputForm.SetValidationEnabled(const Value: Boolean);
+begin
+  FValidationEnabled:= Value;
+end;
+
 {$endregion}
 
 {$region 'TIWBSInputGroup'}

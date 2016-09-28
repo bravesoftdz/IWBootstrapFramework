@@ -162,17 +162,17 @@ type
   // Base class for IWBS data aware controls
   TIWBSCustomDbControl = class(TIWBSCustomControl, IIWBSComponent)
   private
+    FMaxLength: Integer;
+    procedure SetMaxLength(const AValue:integer);
+  protected
     FDataLink: TIWDataLink;
     FDataField: string;
     FDataSource: TDataSource;
-    FMaxLength: Integer;
-    procedure SetDataField(const AValue: string);
-    procedure SetDataSource(const Value: TDataSource);
-    procedure SetMaxLength(const AValue:integer);
-  protected
     procedure CheckData(AContext: TIWCompContext); virtual;
     property MaxLength: Integer read FMaxLength write SetMaxLength;
     procedure Notification(AComponent: TComponent; AOperation: TOperation); override;
+    procedure SetDataField(const AValue: string); virtual;
+    procedure SetDataSource(const Value: TDataSource); virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;

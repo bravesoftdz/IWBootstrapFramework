@@ -2,7 +2,8 @@ unit IWBSRegister;
 
 interface
 
-uses Classes, System.StrUtils, System.SysUtils,  DesignEditors, IWDsnPaintHandlers;
+uses Classes, System.StrUtils, System.SysUtils,  DesignEditors, DesignIntf,
+  IWDsnPaintHandlers;
 
 type
   TGlyphiconEditor = class(TEnumProperty)
@@ -11,6 +12,14 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const Value: string); override;
   end;
+
+  //For OnAsyncClick Default
+  TIWBSButtonEditor = class(TDefaultEditor)
+    protected
+    procedure EditProperty(const PropertyEditor: IProperty;
+      var Continue: Boolean); override;
+  end;
+
 
   TIWBSPaintHandlerRegion = class (TIWPaintHandlerRectangle)
   public
@@ -79,12 +88,12 @@ procedure Register;
 implementation
 
 uses Windows, Forms, Dialogs, Graphics,
-    DesignIntf,glyphicons, IWBaseControl,
+    glyphicons, IWBaseControl,
      IWBSLayoutMgr, IWBSControls, IWBSCustomInput,
      IWBSRegion, IWBSInput, IWBSButton, IWBSDropDown, IWBSTabControl,
      IWBSCommon, IWBSCustomControl, IWBSImage, IWBSMemoHTML, IWBSTable,
      IWBSSelect2, IWBSAccordion, IWBSAccordionEditor, IWBSFluidForm,
-     IWBSItemsEditor, IWBSRepeater, IWBSJQGrid;
+     IWBSItemsEditor, IWBSRepeater, IWBSJQGrid, IWBSValidator;
 
 
 // advice to install glyphicon font
@@ -629,7 +638,9 @@ begin
   RegisterPropertyEditor(TypeInfo(TStringList), TIWBSRadioGroup, 'Items', TValueListPropertyEditor);
 
   RegisterComponents('IW BootsTrap', [TIWBSButton]);
+  RegisterComponentEditor(TIWBSButton, TIWBSButtonEditor); //For OnAsyncClick Default
   RegisterPropertyEditor(TypeInfo(string), TIWBSButton,'BSGlyphicon', TGlyphiconEditor);
+
 
   RegisterComponents('IW BootsTrap', [TIWBSDropDown]);
   RegisterPropertyEditor(TypeInfo(string), TIWBSDropDown,'BSGlyphicon', TGlyphiconEditor);
@@ -660,6 +671,8 @@ begin
 
   RegisterComponents('IW BootsTrap', [TIWBSRepeater]);
 
+  RegisterComponents('IW BootsTrap', [TIWBSValidator]);
+
   UnlistPublishedProperty(TIWBSCustomControl, 'SkinId');
   UnlistPublishedProperty(TIWBSCustomControl, 'StyleRenderOptions');
 
@@ -681,6 +694,16 @@ begin
 
   UnlistPublishedProperty(TIWBSAccordion, 'TagType');
 
+end;
+
+{ TIWBSButtonEditor }
+
+procedure TIWBSButtonEditor.EditProperty(const PropertyEditor: IProperty;
+  var Continue: Boolean);
+begin
+  // only call inherited method if required event name
+  if CompareText(PropertyEditor.GetName, 'OnAsyncClick') = 0 then
+    inherited;
 end;
 
 initialization

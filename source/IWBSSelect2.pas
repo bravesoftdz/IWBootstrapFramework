@@ -240,13 +240,13 @@ initialization
   //Enable CSS and JS for Select2 Plugin
   if DebugHook <> 0 then
     begin
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.css');
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.js');
+      IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.css');
+      IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.js');
     end
   else
     begin
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.min.css');
-      TIWBSGlobal.IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.min.js');
+      IWBSAddGlobalLinkFile('/<iwbspath>/select2/css/select2.min.css');
+      IWBSAddGlobalLinkFile('/<iwbspath>/select2/js/select2.full.min.js');
     end;
   // this enable the rest event server
   IWBSRegisterRestServerHandler;
